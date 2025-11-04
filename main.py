@@ -14,26 +14,30 @@ class Character:
         # 이미지 로드 및 애니메이션 프레임 설정
         self.idle_image = load_image('Fighter/Idle.png')
         self.walk_image = load_image('Fighter/Walk.png')
+        self.attack_image = load_image('Fighter/Attack_1.png')
         self.frame = 0
 
         # 이미지 프레임 크기 계산
         self.idle_frame_width = self.idle_image.w // 6
         self.walk_frame_width = self.walk_image.w // 8
+        self.attack_frame_width = self.attack_image.w // 4
         self.frame_height = self.walk_image.h
 
         # 행동 상태 초기화
         self.moving_left = False
         self.moving_right = False
+        self.attacking = False
 
         # 프레임 타이머 초기화
         self.frame_time = 0
 
     def update(self):
-        # 좌우 이동
-        if self.moving_left:
-            self.x -= self.speed
-        if self.moving_right:
-            self.x += self.speed
+        # 좌우 이동(공격 중이 아닐 때만)
+        if not self.attacking:
+            if self.moving_left:
+                self.x -= self.speed
+            if self.moving_right:
+                self.x += self.speed
 
         # 화면 경계 처리
         if self.x < 0:
@@ -44,7 +48,14 @@ class Character:
         # 프레임 업데이트
         self.frame_time += 1
 
-        if self.moving_left or self.moving_right:
+        if self.attacking:
+            if self.frame_time >= 5:
+                self.frame+=1
+                self.frame_time = 0
+                if self.frame == 4:
+                    self.frame = 0
+                    self.attacking = False
+        elif self.moving_left or self.moving_right:
             if self.frame_time >= 8:
                 self.frame = (self.frame + 1) % 8
                 self.frame_time = 0
@@ -53,8 +64,16 @@ class Character:
                 self.frame = (self.frame + 1) % 6
                 self.frame_time = 0
 
+    def attack(self):
+        if not self.attacking:
+            self.attacking = True
+            self.frame = 0
+            self.frame_time = 0
+
     def draw(self):
-        if self.moving_left or self.moving_right:
+        if self.attacking:
+            self.attack_image.clip_draw(self.frame * self.attack_frame_width, 0, self.attack_frame_width, self.frame_height, self.x, self.y, 200, 200)
+        elif self.moving_left or self.moving_right:
             self.walk_image.clip_draw(self.frame * self.walk_frame_width, 0, self.walk_frame_width, self.frame_height, self.x, self.y, 200, 200)
         else:
             self.idle_image.clip_draw(self.frame * self.idle_frame_width, 0, self.idle_frame_width, self.frame_height, self.x, self.y, 200, 200)
@@ -68,11 +87,13 @@ def handle_events():
             running = False
         elif event.type == SDL_KEYDOWN:
             if event.key == SDLK_ESCAPE:
-              running = False
+                running = False
             elif event.key == SDLK_a:
                 character.moving_left = True
             elif event.key == SDLK_d:
                 character.moving_right = True
+            elif event.key == SDLK_f or event.key == SDLK_g:
+                character.attack()
         elif event.type == SDL_KEYUP:
             if event.key == SDLK_a:
                 character.moving_left = False
