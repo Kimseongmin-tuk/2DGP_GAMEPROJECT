@@ -52,17 +52,17 @@ class Character:
         self.frame_time += 1
 
         if self.attacking:
-            if self.frame_time >= 5:
+            if self.frame_time >= 10:
                 self.frame+=1
                 self.frame_time = 0
-                if self.frame == 4:
+                if self.frame == 3:
                     self.frame = 0
                     self.attacking = False
         elif self.attacking2:
-            if self.frame_time >= 5:
+            if self.frame_time >= 10:
                 self.frame+=1
                 self.frame_time = 0
-                if self.frame == 4:
+                if self.frame == 3:
                     self.frame = 0
                     self.attacking2 = False
         elif self.moving_left or self.moving_right:
