@@ -6,17 +6,26 @@ WINDOW_HEIGHT = 800
 
 class Character:
     def __init__(self):
+        # 캐릭터 초기 위치 및 속도 설정
         self.x = WINDOW_WIDTH // 2
         self.y = WINDOW_HEIGHT // 2
         self.speed = 3
+
+        # 이미지 로드 및 애니메이션 프레임 설정
         self.idle_image = load_image('Fighter/Idle.png')
         self.walk_image = load_image('Fighter/Walk.png')
         self.frame = 0
+
+        # 이미지 프레임 크기 계산
         self.idle_frame_width = self.idle_image.w // 6
         self.walk_frame_width = self.walk_image.w // 8
         self.frame_height = self.walk_image.h
+
+        # 행동 상태 초기화
         self.moving_left = False
         self.moving_right = False
+
+        # 프레임 타이머 초기화
         self.frame_time = 0
 
     def update(self):
