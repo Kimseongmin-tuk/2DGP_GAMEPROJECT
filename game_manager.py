@@ -40,6 +40,8 @@ class GameManager:
                     self.character1.attack()
                 elif event.key == SDLK_g:
                     self.character1.attack2()
+                elif event.key == SDLK_w:
+                    self.character1.jump()
 
                 # 플레이어2
                 elif event.key == SDLK_LEFT:
@@ -50,6 +52,8 @@ class GameManager:
                     self.character2.attack()
                 elif event.key == SDLK_l:
                     self.character2.attack2()
+                elif event.key == SDLK_UP:
+                    self.character2.jump()
             elif event.type == SDL_KEYUP:
                 # 플레이어1
                 if event.key == SDLK_a:
