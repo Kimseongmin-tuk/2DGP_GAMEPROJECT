@@ -71,6 +71,14 @@ class GameManager:
         self.character1.update(opponent_x = self.character2.x)
         self.character2.update(opponent_x = self.character1.x)
 
+        # 플레이어2가 플레이어1을 공격했는지 확인
+        if self.character2.check_hit(self.character1):
+            self.character2.get_hit()
+
+        # 플레이어1이 플레이어2를 공격했는지 확인
+        if self.character1.check_hit(self.character2):
+            self.character1.get_hit()
+
     def draw(self):
         clear_canvas()
         self.character1.draw()
