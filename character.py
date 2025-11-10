@@ -27,7 +27,7 @@ class Character:
             self.attack2_frame_count = 4  # Attack_3: 5프레임
         elif character_name == 'Samurai':
             self.attack_frame_count = 6  # Attack_1: 6프레임
-            self.attack2_frame_count = 3  # Attack_3: 3프레임
+            self.attack2_frame_count = 4  # Attack_3: 4프레임
         else:
             # 기본값
             self.attack_frame_count = 4

@@ -47,7 +47,7 @@ open_canvas(WINDOW_WIDTH, WINDOW_HEIGHT)
 
 # 캐릭터 생성 - 원하는 캐릭터 이름을 입력
 # 'Fighter', 'Shinobi', 'Samurai' 중 선택 가능
-character = Character('Shinobi', WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2, speed=3)
+character = Character('Samurai', WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2, speed=3)
 
 running = True
 
