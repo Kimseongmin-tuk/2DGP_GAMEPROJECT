@@ -18,11 +18,26 @@ class Character:
         self.attack2_image = load_image(f'{character_name}/Attack_3.png')
         self.frame = 0
 
+        # 캐릭터별 프레임 수 설정
+        if character_name == 'Fighter':
+            self.attack_frame_count = 4
+            self.attack2_frame_count = 4
+        elif character_name == 'Shinobi':
+            self.attack_frame_count = 4  # Attack_1: 4프레임
+            self.attack2_frame_count = 5  # Attack_3: 5프레임
+        elif character_name == 'Samurai':
+            self.attack_frame_count = 6  # Attack_1: 6프레임
+            self.attack2_frame_count = 3  # Attack_3: 3프레임
+        else:
+            # 기본값
+            self.attack_frame_count = 4
+            self.attack2_frame_count = 4
+
         # 이미지 프레임 크기 계산
         self.idle_frame_width = self.idle_image.w // 6
         self.walk_frame_width = self.walk_image.w // 8
-        self.attack_frame_width = self.attack_image.w // 4
-        self.attack2_frame_width = self.attack2_image.w // 4
+        self.attack_frame_width = self.attack_image.w // self.attack_frame_count
+        self.attack2_frame_width = self.attack2_image.w // self.attack2_frame_count
         self.frame_height = self.walk_image.h
 
         # 행동 상태 초기화
@@ -55,14 +70,14 @@ class Character:
             if self.frame_time >= 10:
                 self.frame += 1
                 self.frame_time = 0
-                if self.frame == 3:
+                if self.frame >= self.attack_frame_count:
                     self.frame = 0
                     self.attacking = False
         elif self.attacking2:
             if self.frame_time >= 10:
                 self.frame += 1
                 self.frame_time = 0
-                if self.frame == 3:
+                if self.frame >= self.attack2_frame_count:
                     self.frame = 0
                     self.attacking2 = False
         elif self.moving_left or self.moving_right:
