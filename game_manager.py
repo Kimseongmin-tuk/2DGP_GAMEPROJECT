@@ -6,20 +6,16 @@ class GameManager:
         self.width = width
         self.height = height
         self.running = False
-        self.character = None
+        self.character1 = None
+        self.character2 = None
 
-    def init(self, character_name='Fighter', character_x=None, character_y=None, character_speed=3):
+    def init(self, character1_name='Fighter', character2_name = 'Samurai', character_speed=3):
         # 윈도우 생성
         open_canvas(self.width, self.height)
 
         # 캐릭터 초기 위치 설정
-        if character_x is None:
-            character_x = self.width // 2
-        if character_y is None:
-            character_y = self.height // 2
-
-        # 캐릭터 생성
-        self.character = Character(character_name, character_x, character_y, character_speed)
+        self.character1 = Character(character1_name, self.width // 4, self.height // 2, character_speed, facing_right=True)
+        self.character2 = Character(character2_name, self.width * 3 // 4, self.height // 2, character_speed, facing_right=False)
 
         self.running = True
 
@@ -32,26 +28,49 @@ class GameManager:
             elif event.type == SDL_KEYDOWN:
                 if event.key == SDLK_ESCAPE:
                     self.running = False
+
+                # 플레이어1
                 elif event.key == SDLK_a:
-                    self.character.moving_left = True
+                    # 더블탭 감지를 위해 key_down 메서드 호출
+                    self.character1.key_down('left')
                 elif event.key == SDLK_d:
-                    self.character.moving_right = True
+                    # 더블탭 감지를 위해 key_down 메서드 호출
+                    self.character1.key_down('right')
                 elif event.key == SDLK_f:
-                    self.character.attack()
+                    self.character1.attack()
                 elif event.key == SDLK_g:
-                    self.character.attack2()
+                    self.character1.attack2()
+
+                # 플레이어2
+                elif event.key == SDLK_LEFT:
+                    self.character2.key_down('left')
+                elif event.key == SDLK_RIGHT:
+                    self.character2.key_down('right')
+                elif event.key == SDLK_k:
+                    self.character2.attack()
+                elif event.key == SDLK_l:
+                    self.character2.attack2()
             elif event.type == SDL_KEYUP:
+                # 플레이어1
                 if event.key == SDLK_a:
-                    self.character.moving_left = False
+                    self.character1.key_up('left')
                 elif event.key == SDLK_d:
-                    self.character.moving_right = False
+                    self.character1.key_up('right')
+
+                #플레이어2
+                elif event.key == SDLK_LEFT:
+                    self.character2.key_up('left')
+                elif event.key == SDLK_RIGHT:
+                    self.character2.key_up('right')
 
     def update(self):
-        self.character.update()
+        self.character1.update()
+        self.character2.update()
 
     def draw(self):
         clear_canvas()
-        self.character.draw()
+        self.character1.draw()
+        self.character2.draw()
         update_canvas()
 
     def run(self):
