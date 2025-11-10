@@ -20,10 +20,28 @@ class Character:
         self.gravity = 0.8
         self.jump_power = 15
 
-        # 피격 히트박스 설정
-        self.attack_range = 80
-        self.hitbox_width = 100
-        self.hitbox_height = 100
+        # 캐릭터별 히트박스 설정
+        if character_name == 'Fighter':
+            self.attack_range = 90  # 근접 전투 스타일
+            self.attack2_range = 85
+            self.hitbox_width = 100
+            self.hitbox_height = 100
+        elif character_name == 'Shinobi':
+            self.attack_range = 110  # 긴 리치
+            self.attack2_range = 130  # 원거리 공격
+            self.hitbox_width = 85  # 날렵한 체형
+            self.hitbox_height = 95
+        elif character_name == 'Samurai':
+            self.attack_range = 120  # 검의 리치가 김
+            self.attack2_range = 100
+            self.hitbox_width = 95
+            self.hitbox_height = 105
+        else:
+            # 기본값
+            self.attack_range = 80
+            self.attack2_range = 80
+            self.hitbox_width = 100
+            self.hitbox_height = 100
 
         # 이미지 로드 (캐릭터 이름에 따라 다른 폴더에서 로드)
         self.idle_image = load_image(f'{character_name}/Idle.png')
@@ -131,15 +149,31 @@ class Character:
         if not self.is_attacking():
             return None
 
-        if self.facing_right:
-            hitbox_x = self.x + self.attack_range // 2
-        else:
-            hitbox_x = self.x - self.attack_range // 2
+        # 공격 1과 공격 2의 범위를 다르게 설정
+        if self.attacking:
+            current_range = self.attack_range
+        else:  # attacking2
+            current_range = self.attack2_range
 
-        return {'x': hitbox_x, 'y': self.y, 'width': self.attack_range, 'height': self.hitbox_height}
+        if self.facing_right:
+            hitbox_x = self.x + current_range // 2
+        else:
+            hitbox_x = self.x - current_range // 2
+
+        return {
+            'x': hitbox_x,
+            'y': self.y,
+            'width': current_range,
+            'height': self.hitbox_height
+        }
 
     def get_body_hitbox(self):
-        return {'x': self.x, 'y': self.y, 'width': self.hitbox_width, 'height': self.hitbox_height}
+        return {
+            'x': self.x,
+            'y': self.y,
+            'width': self.hitbox_width,
+            'height': self.hitbox_height
+        }
 
     def check_hit(self, opponent_hitbox):
         if self.hurt:
