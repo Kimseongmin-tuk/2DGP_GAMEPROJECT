@@ -23,8 +23,8 @@ class Character:
             self.attack_frame_count = 4
             self.attack2_frame_count = 4
         elif character_name == 'Shinobi':
-            self.attack_frame_count = 4  # Attack_1: 4프레임
-            self.attack2_frame_count = 5  # Attack_3: 5프레임
+            self.attack_frame_count = 5  # Attack_1: 4프레임
+            self.attack2_frame_count = 4  # Attack_3: 5프레임
         elif character_name == 'Samurai':
             self.attack_frame_count = 6  # Attack_1: 6프레임
             self.attack2_frame_count = 3  # Attack_3: 3프레임
@@ -90,13 +90,15 @@ class Character:
                 self.frame_time = 0
 
     def attack(self):
-        if not self.attacking:
+        # 어떤 공격도 하고 있지 않을 때만 실행
+        if not self.attacking and not self.attacking2:
             self.attacking = True
             self.frame = 0
             self.frame_time = 0
 
     def attack2(self):
-        if not self.attacking2:
+        # 어떤 공격도 하고 있지 않을 때만 실행
+        if not self.attacking and not self.attacking2:
             self.attacking2 = True
             self.frame_time = 0
             self.frame = 0
