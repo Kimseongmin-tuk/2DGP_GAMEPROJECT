@@ -42,13 +42,13 @@ class Character:
             self.jump_frame_count = 10
             self.hurt_frame_count = 3
         elif character_name == 'Shinobi':
-            self.attack_frame_count = 5  # Attack_1: 5프레임
-            self.attack2_frame_count = 4  # Attack_3: 4프레임
+            self.attack_frame_count = 5
+            self.attack2_frame_count = 4
             self.jump_frame_count = 12
             self.hurt_frame_count = 2
         elif character_name == 'Samurai':
-            self.attack_frame_count = 6  # Attack_1: 6프레임
-            self.attack2_frame_count = 4  # Attack_3: 4프레임
+            self.attack_frame_count = 6
+            self.attack2_frame_count = 4
             self.jump_frame_count = 12
             self.hurt_frame_count = 2
         else:
@@ -77,7 +77,7 @@ class Character:
 
         # 더블탭 감지를 위한 변수
         self.last_key_time = {'left': 0, 'right': 0}
-        self.double_tap_threshold = 0.3  # 0.3초 이내 더블탭
+        self.double_tap_threshold = 0.3
 
         # 프레임 타이머 초기화
         self.frame_time = 0
@@ -85,14 +85,12 @@ class Character:
     def key_down(self, direction):
         current_time = time.time()
 
-        # 점프 중이 아닐 때만 더블탭 감지
         if not self.jumping and not self.hurt:
             if current_time - self.last_key_time[direction] < self.double_tap_threshold:
                 self.running = True
 
         self.last_key_time[direction] = current_time
 
-        # 이동 상태 설정
         if direction == 'left':
             self.moving_left = True
         elif direction == 'right':
@@ -101,12 +99,10 @@ class Character:
     def key_up(self, direction):
         if direction == 'left':
             self.moving_left = False
-            # 왼쪽 키를 떼면 달리기 해제
             if not self.moving_right:
                 self.running = False
         elif direction == 'right':
             self.moving_right = False
-            # 오른쪽 키를 떼면 달리기 해제
             if not self.moving_left:
                 self.running = False
 
@@ -123,7 +119,6 @@ class Character:
             self.frame = 0
             self.frame_time = 0
 
-            # 피격 시 뒤로 밀려남
             if self.facing_right:
                 self.x -= 10
             else:
@@ -141,10 +136,10 @@ class Character:
         else:
             hitbox_x = self.x - self.attack_range // 2
 
-        return {'x' : hitbox_x, 'y' : self.y, 'width' : self.attack_range, 'height' : self.hitbox_height}
+        return {'x': hitbox_x, 'y': self.y, 'width': self.attack_range, 'height': self.hitbox_height}
 
     def get_body_hitbox(self):
-        return {'x' : self.x, 'y' : self.y, 'width' : self.hitbox_width, 'height' : self.hitbox_height}
+        return {'x': self.x, 'y': self.y, 'width': self.hitbox_width, 'height': self.hitbox_height}
 
     def check_hit(self, opponent_hitbox):
         if self.hurt:
@@ -157,12 +152,20 @@ class Character:
 
         body_box = self.get_body_hitbox()
 
-        if abs(attack_box['x'] - body_box['x']) < (attack_box['width'] + body_box['width']) / 2 and abs(attack_box['y'] - body_box['y']) < (attack_box['height'] + body_box['height']) / 2:
+        if abs(attack_box['x'] - body_box['x']) < (attack_box['width'] + body_box['width']) / 2 and abs(
+                attack_box['y'] - body_box['y']) < (attack_box['height'] + body_box['height']) / 2:
             return True
 
         return False
 
-    def update(self, opponent_x = None):
+    def is_moving_backward(self):
+        if self.facing_right and self.moving_left:
+            return True
+        elif not self.facing_right and self.moving_right:
+            return True
+        return False
+
+    def update(self, opponent_x=None):
         # 항상 상대와 마주보도록 설정
         if opponent_x is not None:
             if opponent_x > self.x:
@@ -175,15 +178,18 @@ class Character:
             self.y += self.jump_speed
             self.jump_speed -= self.gravity
 
-            # 땅에 닿으면 점프 종료
             if self.y <= self.ground_y:
                 self.y = self.ground_y
                 self.jumping = False
                 self.jump_speed = 0
                 self.running = False
 
-        # 좌우 이동(공격 중이 아닐 때만)
+        # 좌우 이동
         if not self.attacking and not self.attacking2:
+            # 뒤로 이동 중이면 달리기 해제
+            if self.is_moving_backward():
+                self.running = False
+
             current_speed = self.run_speed if self.running else self.speed
 
             if self.moving_left:
@@ -194,7 +200,7 @@ class Character:
         # 화면 경계 처리
         if self.x < 0:
             self.x = 0
-        elif self.x > 1200:  # WINDOW_WIDTH
+        elif self.x > 1200:
             self.x = 1200
 
         # 프레임 업데이트
@@ -226,32 +232,28 @@ class Character:
                     self.frame = 0
                     self.attacking2 = False
         elif self.moving_left or self.moving_right:
-            # 달리기 중이면 더 빠른 애니메이션
-            frame_delay = 5 if self.running else 8
+            frame_delay = 5 if (self.running and not self.is_moving_backward()) else 8
             if self.frame_time >= frame_delay:
                 self.frame = (self.frame + 1) % 8
                 self.frame_time = 0
-        else: # idle 상태
+        else:
             if self.frame_time >= 8:
                 self.frame = (self.frame + 1) % 6
                 self.frame_time = 0
 
     def attack(self):
-        # 어떤 공격도 하고 있지 않을 때만 실행
         if not self.attacking and not self.attacking2:
             self.attacking = True
             self.frame = 0
             self.frame_time = 0
 
     def attack2(self):
-        # 어떤 공격도 하고 있지 않을 때만 실행
         if not self.attacking and not self.attacking2:
             self.attacking2 = True
             self.frame_time = 0
             self.frame = 0
 
     def draw(self):
-        # 좌우 반전 방향 설정
         if self.facing_right:
             flip = ''
         else:
@@ -268,8 +270,7 @@ class Character:
                 self.hurt_image.clip_composite_draw(
                     self.frame * self.hurt_frame_width, 0,
                     self.hurt_frame_width, self.frame_height,
-                    0, flip,
-                    self.x, self.y, 200, 200
+                    0, flip, self.x, self.y, 200, 200
                 )
         elif self.jumping and not self.attacking and not self.attacking2:
             if self.facing_right:
@@ -281,8 +282,7 @@ class Character:
                 self.jump_image.clip_composite_draw(
                     self.frame * self.jump_frame_width, 0,
                     self.jump_frame_width, self.frame_height,
-                    0, flip,
-                    self.x, self.y, 200, 200
+                    0, flip, self.x, self.y, 200, 200
                 )
         elif self.attacking:
             if self.facing_right:
@@ -295,8 +295,7 @@ class Character:
                 self.attack_image.clip_composite_draw(
                     self.frame * self.attack_frame_width, 0,
                     self.attack_frame_width, self.frame_height,
-                    0, flip,
-                    self.x, self.y, 200, 200
+                    0, flip, self.x, self.y, 200, 200
                 )
         elif self.attacking2:
             if self.facing_right:
@@ -309,12 +308,11 @@ class Character:
                 self.attack2_image.clip_composite_draw(
                     self.frame * self.attack2_frame_width, 0,
                     self.attack2_frame_width, self.frame_height,
-                    0, flip,
-                    self.x, self.y, 200, 200
+                    0, flip, self.x, self.y, 200, 200
                 )
         elif self.moving_left or self.moving_right:
-            # 달리는 중이면 Run 이미지 사용
-            if self.running:
+            # 앞으로 달리는 중일 때만 Run 이미지 사용
+            if self.running and not self.is_moving_backward():
                 if self.facing_right:
                     self.run_image.clip_draw(
                         self.frame * self.run_frame_width, 0,
@@ -325,8 +323,7 @@ class Character:
                     self.run_image.clip_composite_draw(
                         self.frame * self.run_frame_width, 0,
                         self.run_frame_width, self.frame_height,
-                        0, flip,
-                        self.x, self.y, 200, 200
+                        0, flip, self.x, self.y, 200, 200
                     )
             else:
                 if self.facing_right:
@@ -339,8 +336,7 @@ class Character:
                     self.walk_image.clip_composite_draw(
                         self.frame * self.walk_frame_width, 0,
                         self.walk_frame_width, self.frame_height,
-                        0, flip,
-                        self.x, self.y, 200, 200
+                        0, flip, self.x, self.y, 200, 200
                     )
         else:
             if self.facing_right:
@@ -353,6 +349,5 @@ class Character:
                 self.idle_image.clip_composite_draw(
                     self.frame * self.idle_frame_width, 0,
                     self.idle_frame_width, self.frame_height,
-                    0, flip,
-                    self.x, self.y, 200, 200
+                    0, flip, self.x, self.y, 200, 200
                 )
