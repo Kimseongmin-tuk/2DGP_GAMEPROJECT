@@ -64,8 +64,8 @@ class GameManager:
                     self.character2.key_up('right')
 
     def update(self):
-        self.character1.update()
-        self.character2.update()
+        self.character1.update(opponent_x = self.character2.x)
+        self.character2.update(opponent_x = self.character1.x)
 
     def draw(self):
         clear_canvas()

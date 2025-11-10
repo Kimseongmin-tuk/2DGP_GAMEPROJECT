@@ -86,7 +86,14 @@ class Character:
             if not self.moving_left:
                 self.running = False
 
-    def update(self):
+    def update(self, opponent_x = None):
+        # 항상 상대와 마주보도록 설정
+        if opponent_x is not None:
+            if opponent_x > self.x:
+                self.facing_right = True
+            else:
+                self.facing_right = False
+
         # 좌우 이동(공격 중이 아닐 때만)
         if not self.attacking and not self.attacking2:
             current_speed = self.run_speed if self.running else self.speed
