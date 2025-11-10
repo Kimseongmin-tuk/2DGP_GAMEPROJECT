@@ -216,7 +216,6 @@ class Character:
                 self.y = self.ground_y
                 self.jumping = False
                 self.jump_speed = 0
-                self.running = False
 
         # 좌우 이동
         if not self.attacking and not self.attacking2:
