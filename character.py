@@ -192,6 +192,37 @@ class Character:
 
         return False
 
+    def check_collision(self, opponent):
+        # 점프로는 캐릭터 넘어갈 수 있음
+        if self.jumping or opponent.jumping:
+            return False
+
+        distance = abs(self.x - opponent.x)
+        min_distance = (self.hitbox_width + opponent.hitbox_width) / 2
+
+        if distance < min_distance:
+            return True
+
+        return False
+
+    def resolve_collision(self, opponent):
+        if not self.check_collision(opponent):
+            return
+
+        # 충돌 시 밀어내기
+        if self.x < opponent.x:
+            overlap = (self.hitbox_width + opponent.hitbox_width) / 2 - (opponent.x - self.x)
+            self.x -= overlap / 2
+            opponent.x += overlap / 2
+        else:
+            overlap = (self.hitbox_width + opponent.hitbox_width) / 2 - (self.x - opponent.x)
+            self.x += overlap / 2
+            opponent.x -= overlap / 2
+
+        # 화면 경계 처리
+        self.x = max(0, min(1200, self.x))
+        opponent.x = max(0, min(1200, opponent.x))
+
     def is_moving_backward(self):
         if self.facing_right and self.moving_left:
             return True

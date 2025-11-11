@@ -71,6 +71,9 @@ class GameManager:
         self.character1.update(opponent_x = self.character2.x)
         self.character2.update(opponent_x = self.character1.x)
 
+        # 캐릭터 충돌 처리
+        self.character1.resolve_collision(self.character2)
+
         # 플레이어2가 플레이어1을 공격했는지 확인
         if self.character2.check_hit(self.character1):
             self.character2.get_hit()
