@@ -171,7 +171,7 @@ class AIController:
             self.character.attack2()
 
     def perform_jump(self):
-        if not self.character.is_jumping() and not self.character.hurt:
+        if not self.character.jumping and not self.character.hurt:
             self.character.jump()
 
     def jump_and_move(self):

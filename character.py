@@ -22,30 +22,27 @@ class Character:
 
         # 캐릭터별 히트박스 설정
         if character_name == 'Fighter':
-            self.attack_range = 90  # 근접 전투 스타일
+            self.attack_range = 90
             self.attack2_range = 85
             self.hitbox_width = 100
             self.hitbox_height = 100
         elif character_name == 'Shinobi':
-            self.attack_range = 110  # 긴 리치
-            self.attack2_range = 130  # 원거리 공격
-            self.hitbox_width = 85  # 날렵한 체형
+            self.attack_range = 110
+            self.attack2_range = 130
+            self.hitbox_width = 85
             self.hitbox_height = 95
         elif character_name == 'Samurai':
-            self.attack_range = 120  # 검의 리치가 김
+            self.attack_range = 120
             self.attack2_range = 100
             self.hitbox_width = 95
             self.hitbox_height = 105
         else:
-            # 기본값
             self.attack_range = 80
             self.attack2_range = 80
             self.hitbox_width = 100
             self.hitbox_height = 100
 
-        # 충돌 감지 변수
-
-        # 이미지 로드 (캐릭터 이름에 따라 다른 폴더에서 로드)
+        # 이미지 로드
         self.idle_image = load_image(f'{character_name}/Idle.png')
         self.walk_image = load_image(f'{character_name}/Walk.png')
         self.run_image = load_image(f'{character_name}/Run.png')
@@ -53,6 +50,7 @@ class Character:
         self.attack2_image = load_image(f'{character_name}/Attack_3.png')
         self.jump_image = load_image(f'{character_name}/Jump.png')
         self.hurt_image = load_image(f'{character_name}/Hurt.png')
+        self.shield_image = load_image(f'{character_name}/Shield.png')
         self.frame = 0
 
         # 캐릭터별 프레임 수 설정
@@ -61,20 +59,25 @@ class Character:
             self.attack2_frame_count = 4
             self.jump_frame_count = 10
             self.hurt_frame_count = 3
+            self.shield_frame_count = 2
         elif character_name == 'Shinobi':
             self.attack_frame_count = 5
             self.attack2_frame_count = 4
             self.jump_frame_count = 12
             self.hurt_frame_count = 2
+            self.shield_frame_count = 4
         elif character_name == 'Samurai':
             self.attack_frame_count = 6
             self.attack2_frame_count = 4
             self.jump_frame_count = 12
             self.hurt_frame_count = 2
+            self.shield_frame_count = 2
         else:
-            # 기본값
             self.attack_frame_count = 4
             self.attack2_frame_count = 4
+            self.jump_frame_count = 10
+            self.hurt_frame_count = 3
+            self.shield_frame_count = 2
 
         # 이미지 프레임 크기 계산
         self.idle_frame_width = self.idle_image.w // 6
@@ -84,6 +87,7 @@ class Character:
         self.attack2_frame_width = self.attack2_image.w // self.attack2_frame_count
         self.jump_frame_width = self.jump_image.w // self.jump_frame_count
         self.hurt_frame_width = self.hurt_image.w // self.hurt_frame_count
+        self.shield_frame_width = self.shield_image.w // self.shield_frame_count
         self.frame_height = self.walk_image.h
 
         # 행동 상태 초기화
@@ -94,6 +98,7 @@ class Character:
         self.attacking2 = False
         self.jumping = False
         self.hurt = False
+        self.blocking = False  # 막기 상태 추가
 
         # 더블탭 감지를 위한 변수
         self.last_key_time = {'left': 0, 'right': 0}
@@ -105,7 +110,7 @@ class Character:
     def key_down(self, direction):
         current_time = time.time()
 
-        if not self.jumping and not self.hurt:
+        if not self.jumping and not self.hurt and not self.blocking:
             if current_time - self.last_key_time[direction] < self.double_tap_threshold:
                 self.running = True
 
@@ -127,34 +132,44 @@ class Character:
                 self.running = False
 
     def jump(self):
-        if not self.jumping:
+        if not self.jumping and not self.blocking:
             self.jumping = True
             self.jump_speed = self.jump_power
             self.frame = 0
             self.frame_time = 0
 
     def get_hit(self):
-        if not self.hurt:
-            self.hurt = True
+        """피격 처리 - 방어 중인지 확인"""
+        if not self.hurt and not self.blocking:
+            # 뒤로 이동 중이거나 정지 상태면 방어
+            if self.is_moving_backward() or (not self.moving_left and not self.moving_right):
+                self.blocking = True
+                self.hurt = False
+            else:
+                # 앞으로 이동 중이면 피격
+                self.hurt = True
+                self.blocking = False
+
+                # 피격 시 뒤로 밀려남
+                if self.facing_right:
+                    self.x -= 10
+                else:
+                    self.x += 10
+
             self.frame = 0
             self.frame_time = 0
-
-            if self.facing_right:
-                self.x -= 10
-            else:
-                self.x += 10
 
     def is_attacking(self):
         return self.attacking or self.attacking2
 
     def get_attacking_hitbox(self):
+        """공격 히트박스 반환"""
         if not self.is_attacking():
             return None
 
-        # 공격 1과 공격 2의 범위를 다르게 설정
         if self.attacking:
             current_range = self.attack_range
-        else:  # attacking2
+        else:
             current_range = self.attack2_range
 
         if self.facing_right:
@@ -178,7 +193,7 @@ class Character:
         }
 
     def check_hit(self, opponent_hitbox):
-        if self.hurt:
+        if self.hurt or self.blocking:
             return False
 
         attack_box = opponent_hitbox.get_attacking_hitbox()
@@ -194,16 +209,15 @@ class Character:
 
         return False
 
-    def check_collision(self, opponent):
-        global collision_width_self, collision_width_opponent, min_distance
-
-        # 점프로는 캐릭터 넘어갈 수 있음
+    def check_collision_with(self, opponent):
+        """상대 캐릭터와의 충돌 체크"""
         if self.jumping or opponent.jumping:
             return False
 
+        collision_width_self = self.hitbox_width * 0.4
+        collision_width_opponent = opponent.hitbox_width * 0.4
+
         distance = abs(self.x - opponent.x)
-        collision_width_self = self.hitbox_width / 2
-        collision_width_opponent = opponent.hitbox_width / 2
         min_distance = (collision_width_self + collision_width_opponent) / 2
 
         if distance < min_distance:
@@ -212,22 +226,39 @@ class Character:
         return False
 
     def resolve_collision(self, opponent):
-        global collision_width_self, collision_width_opponent, min_distance
-        
-        if not self.check_collision(opponent):
+        if not self.check_collision_with(opponent):
             return
 
-        # 충돌 시 밀어내기
-        if self.x < opponent.x:
-            overlap = min_distance - (opponent.x - self.x)
-            self.x -= overlap / 2
-            opponent.x += overlap / 2
-        else:
-            overlap = min_distance - (self.x - opponent.x)
-            self.x += overlap / 2
-            opponent.x -= overlap / 2
+        collision_width_self = self.hitbox_width * 0.4
+        collision_width_opponent = opponent.hitbox_width * 0.4
 
-        # 화면 경계 처리
+        distance = abs(self.x - opponent.x)
+        min_distance = (collision_width_self + collision_width_opponent) / 2
+        overlap = min_distance - distance
+
+        if overlap < 0.5:
+            return
+
+        self_moving = self.moving_left or self.moving_right
+        opponent_moving = opponent.moving_left or opponent.moving_right
+
+        if self.x < opponent.x:
+            if self_moving and not opponent_moving:
+                self.x -= overlap
+            elif opponent_moving and not self_moving:
+                opponent.x += overlap
+            else:
+                self.x -= overlap / 2
+                opponent.x += overlap / 2
+        else:
+            if self_moving and not opponent_moving:
+                self.x += overlap
+            elif opponent_moving and not self_moving:
+                opponent.x -= overlap
+            else:
+                self.x += overlap / 2
+                opponent.x -= overlap / 2
+
         self.x = max(0, min(1200, self.x))
         opponent.x = max(0, min(1200, opponent.x))
 
@@ -236,7 +267,6 @@ class Character:
             return True
         elif not self.facing_right and self.moving_right:
             return True
-
         return False
 
     def update(self, opponent_x=None):
@@ -256,10 +286,10 @@ class Character:
                 self.y = self.ground_y
                 self.jumping = False
                 self.jump_speed = 0
+                self.running = False
 
         # 좌우 이동
-        if not self.attacking and not self.attacking2:
-            # 뒤로 이동 중이면 달리기 해제
+        if not self.attacking and not self.attacking2 and not self.blocking:
             if self.is_moving_backward():
                 self.running = False
 
@@ -279,7 +309,16 @@ class Character:
         # 프레임 업데이트
         self.frame_time += 1
 
-        if self.hurt:
+        if self.blocking:
+            # 방어 애니메이션
+            if self.frame_time >= 10:
+                self.frame += 1
+                self.frame_time = 0
+                if self.frame >= self.shield_frame_count:
+                    self.frame = 0
+                    self.blocking = False
+        elif self.hurt:
+            # 피격 애니메이션
             if self.frame_time >= 10:
                 self.frame += 1
                 self.frame_time = 0
@@ -315,13 +354,13 @@ class Character:
                 self.frame_time = 0
 
     def attack(self):
-        if not self.attacking and not self.attacking2:
+        if not self.attacking and not self.attacking2 and not self.blocking:
             self.attacking = True
             self.frame = 0
             self.frame_time = 0
 
     def attack2(self):
-        if not self.attacking and not self.attacking2:
+        if not self.attacking and not self.attacking2 and not self.blocking:
             self.attacking2 = True
             self.frame_time = 0
             self.frame = 0
@@ -332,7 +371,22 @@ class Character:
         else:
             flip = 'h'
 
-        if self.hurt:
+        if self.blocking:
+            # 방어 이미지 출력
+            if self.facing_right:
+                self.shield_image.clip_draw(
+                    self.frame * self.shield_frame_width, 0,
+                    self.shield_frame_width, self.frame_height,
+                    self.x, self.y, 200, 200
+                )
+            else:
+                self.shield_image.clip_composite_draw(
+                    self.frame * self.shield_frame_width, 0,
+                    self.shield_frame_width, self.frame_height,
+                    0, flip, self.x, self.y, 200, 200
+                )
+        elif self.hurt:
+            # 피격 이미지 출력
             if self.facing_right:
                 self.hurt_image.clip_draw(
                     self.frame * self.hurt_frame_width, 0,
@@ -384,7 +438,6 @@ class Character:
                     0, flip, self.x, self.y, 200, 200
                 )
         elif self.moving_left or self.moving_right:
-            # 앞으로 달리는 중일 때만 Run 이미지 사용
             if self.running and not self.is_moving_backward():
                 if self.facing_right:
                     self.run_image.clip_draw(
