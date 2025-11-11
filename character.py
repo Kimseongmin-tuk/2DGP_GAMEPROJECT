@@ -139,12 +139,16 @@ class Character:
             self.frame_time = 0
 
     def get_hit(self):
-        """피격 처리 - 방어 중인지 확인"""
         if not self.hurt and not self.blocking:
             # 뒤로 이동 중이거나 정지 상태면 방어
-            if self.is_moving_backward() or (not self.moving_left and not self.moving_right):
+            if self.is_moving_backward():
                 self.blocking = True
                 self.hurt = False
+
+                if self.facing_right:
+                    self.x -= 5
+                else:
+                    self.x += 5
             else:
                 # 앞으로 이동 중이면 피격
                 self.hurt = True
