@@ -23,4 +23,19 @@ class AIController:
         self.last_action_time = time.time()
 
     def update(self):
+        self.action_timer += 1
+
+        # 일정 시간마다 새로운 행동
+        if self.action_timer >= self.next_action_time:
+            self.decide_action()
+            self.action_timer = 0
+            self.next_action_time = random.uniform(0.3, 0.7)
+
+        # 현재 행동 수행
+        self.perform_action()
+
+    def decide_action(self):
+        pass
+
+    def perform_action(self):
         pass
