@@ -35,6 +35,23 @@ class AIController:
         self.perform_action()
 
     def decide_action(self):
+        distance = abs(self.character.x - self.opponent.x)
+
+        # 상대와 거리에 따른 행동 결정
+        if distance < 100: # 근거리
+            self.decide_close_range_action()
+        elif distance < 200: # 중거리
+            self.decide_mid_range_action()
+        else: # 원거리
+            self.decide_long_range_action()
+
+    def decide_close_range_action(self):
+        pass
+
+    def decide_mid_range_action(self):
+        pass
+
+    def decide_long_range_action(self):
         pass
 
     def perform_action(self):
