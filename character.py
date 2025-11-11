@@ -107,6 +107,10 @@ class Character:
         # 프레임 타이머 초기화
         self.frame_time = 0
 
+        # 공격 쿨타임 설정
+        self.attack_cooldown = 0  # 남은 쿨타임 (프레임)
+        self.attack_cooldown_time = 20  # 쿨타임 시간 (20프레임 = 0.2초)
+
     def key_down(self, direction):
         current_time = time.time()
 
@@ -272,6 +276,10 @@ class Character:
         return False
 
     def update(self, opponent_x=None):
+        # 공격 쿨타임 감소
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
+
         # 항상 상대와 마주보도록 설정
         if opponent_x is not None:
             if opponent_x > self.x:
@@ -338,6 +346,7 @@ class Character:
                 if self.frame >= self.attack_frame_count:
                     self.frame = 0
                     self.attacking = False
+                    self.attack_cooldown = self.attack_cooldown_time  # 쿨타임 시작
         elif self.attacking2:
             if self.frame_time >= 10:
                 self.frame += 1
@@ -345,6 +354,7 @@ class Character:
                 if self.frame >= self.attack2_frame_count:
                     self.frame = 0
                     self.attacking2 = False
+                    self.attack_cooldown = self.attack_cooldown_time  # 쿨타임 시작
         elif self.moving_left or self.moving_right:
             frame_delay = 5 if (self.running and not self.is_moving_backward()) else 8
             if self.frame_time >= frame_delay:
@@ -356,13 +366,15 @@ class Character:
                 self.frame_time = 0
 
     def attack(self):
-        if not self.attacking and not self.attacking2 and not self.blocking and not self.hurt:
+        if (not self.attacking and not self.attacking2 and not self.blocking and
+            not self.hurt and self.attack_cooldown <= 0):
             self.attacking = True
             self.frame = 0
             self.frame_time = 0
 
     def attack2(self):
-        if not self.attacking and not self.attacking2 and not self.blocking and not self.hurt:
+        if (not self.attacking and not self.attacking2 and not self.blocking and
+            not self.hurt and self.attack_cooldown <= 0):
             self.attacking2 = True
             self.frame_time = 0
             self.frame = 0
