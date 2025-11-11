@@ -1,5 +1,6 @@
 from pico2d import *
 from character import Character
+from ai_controller import *
 
 class GameManager:
     def __init__(self, width=1200, height=800):
@@ -8,14 +9,20 @@ class GameManager:
         self.running = False
         self.character1 = None
         self.character2 = None
+        self.ai_controller = None
+        self.ai_enable = False
 
-    def init(self, character1_name='Fighter', character2_name = 'Samurai', character_speed=3):
+    def init(self, character1_name='Fighter', character2_name = 'Samurai', character_speed=3, enable_ai = True):
         # 윈도우 생성
         open_canvas(self.width, self.height)
 
         # 캐릭터 초기 위치 설정
         self.character1 = Character(character1_name, self.width // 4, self.height // 2, character_speed, facing_right=True)
         self.character2 = Character(character2_name, self.width * 3 // 4, self.height // 2, character_speed, facing_right=False)
+
+        self.ai_enable = enable_ai
+        if self.ai_enable:
+            self.ai_controller = AIController(self.character2, self.character1)
 
         self.running = True
 
@@ -44,16 +51,17 @@ class GameManager:
                     self.character1.jump()
 
                 # 플레이어2
-                elif event.key == SDLK_LEFT:
-                    self.character2.key_down('left')
-                elif event.key == SDLK_RIGHT:
-                    self.character2.key_down('right')
-                elif event.key == SDLK_k:
-                    self.character2.attack()
-                elif event.key == SDLK_l:
-                    self.character2.attack2()
-                elif event.key == SDLK_UP:
-                    self.character2.jump()
+                elif not self.ai_enable:
+                    if event.key == SDLK_LEFT:
+                        self.character2.key_down('left')
+                    elif event.key == SDLK_RIGHT:
+                        self.character2.key_down('right')
+                    elif event.key == SDLK_k:
+                        self.character2.attack()
+                    elif event.key == SDLK_l:
+                        self.character2.attack2()
+                    elif event.key == SDLK_UP:
+                        self.character2.jump()
             elif event.type == SDL_KEYUP:
                 # 플레이어1
                 if event.key == SDLK_a:
@@ -62,10 +70,11 @@ class GameManager:
                     self.character1.key_up('right')
 
                 #플레이어2
-                elif event.key == SDLK_LEFT:
-                    self.character2.key_up('left')
-                elif event.key == SDLK_RIGHT:
-                    self.character2.key_up('right')
+                elif not self.ai_enable:
+                    if event.key == SDLK_LEFT:
+                        self.character2.key_up('left')
+                    elif event.key == SDLK_RIGHT:
+                        self.character2.key_up('right')
 
     def update(self):
         self.character1.update(opponent_x = self.character2.x)

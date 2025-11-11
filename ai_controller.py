@@ -23,7 +23,7 @@ class AIController:
         self.last_action_time = time.time()
 
     def update(self):
-        self.action_timer += 1
+        self.action_timer += 0.01
 
         # 일정 시간마다 새로운 행동
         if self.action_timer >= self.next_action_time:
@@ -46,13 +46,114 @@ class AIController:
             self.decide_long_range_action()
 
     def decide_close_range_action(self):
-        pass
+        rand = random.random()
+
+        if self.opponent.is_attacking():
+            # 상대가 공격 중이면 회피
+            if random.random() < 0.7:
+                self.current_action = 'back'
+                self.action_duration = 0.3
+            else:
+                self.current_action = 'jump'
+                self.action_duration = 0.2
+        else:
+            # 공격 또는 후퇴
+            if rand < self.aggressiveness * 0.5:
+                self.current_action = 'attack1'
+                self.action_duration = 0.4
+            elif rand < self.aggressiveness:
+                self.current_action = 'attack2'
+                self.action_duration = 0.4
+            else:
+                self.current_action = 'back'
+                self.action_duration = 0.2
 
     def decide_mid_range_action(self):
-        pass
+        rand = random.random()
+
+        forward_threshold = self.aggressiveness * 0.5  # 예: 0.3
+        dash_attack_threshold = self.aggressiveness * 0.8  # 예: 0.48
+        attack2_threshold = 0.9
+
+        if rand < forward_threshold:
+            self.current_action = 'forward'
+            self.action_duration = 0.3
+        elif rand < dash_attack_threshold:
+            self.current_action = 'dash_attack'
+            self.action_duration = 0.5
+        elif rand < attack2_threshold:
+            self.current_action = 'attack2'
+            self.action_duration = 0.4
+        else:
+            self.current_action = 'idle'
+            self.action_duration = 0.2
 
     def decide_long_range_action(self):
-        pass
+        rand = random.random()
+
+        if rand < 0.7:
+            self.current_action = 'forward'
+            self.action_duration = 0.5
+        elif rand < 0.85:
+            self.current_action = 'dash'
+            self.action_duration = 0.4
+        else:
+            self.current_action = 'jump_forward'
+            self.action_duration = 0.3
 
     def perform_action(self):
+        if self.current_action is None:
+            return
+
+        self.action_duration -= 0.01
+
+        if self.action_duration <= 0:
+            self.stop_all_movement()
+            self.current_action = None
+            return
+
+        if self.current_action == 'forward':
+            self.move_forward()
+        elif self.current_action == 'back':
+            self.move_backward()
+        elif self.current_action == 'dash':
+            self.dash_forward()
+        elif self.current_action == 'dash_attack':
+            self.dash_and_attack()
+        elif self.current_action == 'attack1':
+            self.perform_attack1()
+        elif self.current_action == 'attack2':
+            self.perform_attack2()
+        elif self.current_action == 'jump':
+            self.perform_jump()
+        elif self.current_action == 'jump_forward':
+            self.jump_and_move()
+        elif self.current_action == 'idle':
+            self.stop_all_movement()
+
+    def stop_all_movement(self):
+        pass
+
+    def move_forward(self):
+        pass
+
+    def move_backward(self):
+        pass
+
+    def dash_forward(self):
+        pass
+
+    def dash_and_attack(self):
+        pass
+
+    def perform_attack1(self):
+        pass
+
+    def perform_attack2(self):
+        pass
+
+    def perform_jump(self):
+        pass
+
+    def jump_and_move(self):
         pass
