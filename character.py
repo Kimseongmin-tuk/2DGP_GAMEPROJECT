@@ -236,6 +236,7 @@ class Character:
             return True
         elif not self.facing_right and self.moving_right:
             return True
+
         return False
 
     def update(self, opponent_x=None):
