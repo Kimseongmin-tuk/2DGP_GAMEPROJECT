@@ -198,7 +198,9 @@ class Character:
             return False
 
         distance = abs(self.x - opponent.x)
-        min_distance = (self.hitbox_width + opponent.hitbox_width) / 2
+        collision_width_self = self.hitbox_width / 2
+        collision_width_opponent = opponent.hitbox_width / 2
+        min_distance = (collision_width_self + collision_width_opponent) / 2
 
         if distance < min_distance:
             return True
