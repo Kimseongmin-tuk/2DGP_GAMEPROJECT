@@ -167,7 +167,6 @@ class Character:
         return self.attacking or self.attacking2
 
     def get_attacking_hitbox(self):
-        """공격 히트박스 반환"""
         if not self.is_attacking():
             return None
 
@@ -214,7 +213,6 @@ class Character:
         return False
 
     def check_collision_with(self, opponent):
-        """상대 캐릭터와의 충돌 체크"""
         if self.jumping or opponent.jumping:
             return False
 
@@ -293,7 +291,7 @@ class Character:
                 self.running = False
 
         # 좌우 이동
-        if not self.attacking and not self.attacking2 and not self.blocking:
+        if not self.attacking and not self.attacking2 and not self.blocking and not self.hurt:
             if self.is_moving_backward():
                 self.running = False
 
@@ -358,13 +356,13 @@ class Character:
                 self.frame_time = 0
 
     def attack(self):
-        if not self.attacking and not self.attacking2 and not self.blocking:
+        if not self.attacking and not self.attacking2 and not self.blocking and not self.hurt:
             self.attacking = True
             self.frame = 0
             self.frame_time = 0
 
     def attack2(self):
-        if not self.attacking and not self.attacking2 and not self.blocking:
+        if not self.attacking and not self.attacking2 and not self.blocking and not self.hurt:
             self.attacking2 = True
             self.frame_time = 0
             self.frame = 0
