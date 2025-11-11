@@ -43,6 +43,8 @@ class Character:
             self.hitbox_width = 100
             self.hitbox_height = 100
 
+        # 충돌 감지 변수
+
         # 이미지 로드 (캐릭터 이름에 따라 다른 폴더에서 로드)
         self.idle_image = load_image(f'{character_name}/Idle.png')
         self.walk_image = load_image(f'{character_name}/Walk.png')
@@ -193,6 +195,8 @@ class Character:
         return False
 
     def check_collision(self, opponent):
+        global collision_width_self, collision_width_opponent, min_distance
+
         # 점프로는 캐릭터 넘어갈 수 있음
         if self.jumping or opponent.jumping:
             return False
@@ -208,16 +212,18 @@ class Character:
         return False
 
     def resolve_collision(self, opponent):
+        global collision_width_self, collision_width_opponent, min_distance
+        
         if not self.check_collision(opponent):
             return
 
         # 충돌 시 밀어내기
         if self.x < opponent.x:
-            overlap = (self.hitbox_width + opponent.hitbox_width) / 2 - (opponent.x - self.x)
+            overlap = min_distance - (opponent.x - self.x)
             self.x -= overlap / 2
             opponent.x += overlap / 2
         else:
-            overlap = (self.hitbox_width + opponent.hitbox_width) / 2 - (self.x - opponent.x)
+            overlap = min_distance - (self.x - opponent.x)
             self.x += overlap / 2
             opponent.x -= overlap / 2
 
