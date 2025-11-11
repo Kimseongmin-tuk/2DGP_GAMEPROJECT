@@ -77,6 +77,10 @@ class GameManager:
                         self.character2.key_up('right')
 
     def update(self):
+        if self.ai_enable:
+            self.ai_controller.update()
+
+
         self.character1.update(opponent_x = self.character2.x)
         self.character2.update(opponent_x = self.character1.x)
 
@@ -105,4 +109,6 @@ class GameManager:
             delay(0.01)  # 프레임 딜레이 (약 100 FPS)
 
     def close(self):
+        if self.ai_enable:
+            self.ai_controller.cleaning()
         close_canvas()

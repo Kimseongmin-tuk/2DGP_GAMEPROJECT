@@ -132,28 +132,53 @@ class AIController:
             self.stop_all_movement()
 
     def stop_all_movement(self):
-        pass
+        self.character.moving_left = False
+        self.character.moving_right = False
+        self.character.running = False
 
     def move_forward(self):
-        pass
+        if self.character.facing_right:
+            self.character.key_down('right')
+        else:
+            self.character.key_down('left')
 
     def move_backward(self):
-        pass
+        if self.character.facing_right:
+            self.character.key_down('left')
+        else:
+            self.character.key_down('right')
 
     def dash_forward(self):
-        pass
+        if not self.character.running:
+            direction = 'right' if self.character.facing_right else 'left'
+            self.character.last_key_time[direction] = time.time() - 0.1
+            self.character.key_down(direction)
+
+        self.move_forward()
 
     def dash_and_attack(self):
-        pass
+        if self.action_duration > 0.2:
+            self.dash_forward()
+        else:
+            self.perform_attack1()
 
     def perform_attack1(self):
-        pass
+        if not self.character.is_attacking() and not self.character.hurt:
+            self.character.attack()
 
     def perform_attack2(self):
-        pass
+        if not self.character.is_attacking() and not self.character.hurt:
+            self.character.attack2()
 
     def perform_jump(self):
-        pass
+        if not self.character.is_jumping() and not self.character.hurt:
+            self.character.jump()
 
     def jump_and_move(self):
-        pass
+        if not self.character.jumping:
+            self.character.jump()
+
+        self.move_forward()
+
+    def cleaning(self):
+        self.stop_all_movement()
