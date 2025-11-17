@@ -1,6 +1,7 @@
 from pico2d import *
 from character import Character
 from ai_controller import *
+import time
 
 
 class GameManager:
@@ -18,12 +19,27 @@ class GameManager:
         self.winner = None
         self.ko_time = 0
 
-        # HP바 이미지 (나중에 로드)
+        # 타이머 설정
+        self.game_time = 99  # 게임 시간 (초)
+        self.time_left = 99  # 남은 시간
+        self.last_time_update = 0  # 마지막 시간 업데이트
+
+        # HP바 이미지
         self.hp_images = {}
+
+        # 폰트 (나중에 로드)
+        self.font = None
 
     def init(self, character1_name='Fighter', character2_name='Samurai', character_speed=3, enable_ai=True):
         # 윈도우 생성
         open_canvas(self.width, self.height)
+
+        # 폰트 로드
+        try:
+            self.font = load_font('ENCR10B.TTF', 60)
+        except:
+            print("폰트 로드 실패 - 기본 폰트 사용")
+            self.font = None
 
         # HP바용 이미지 로드
         try:
@@ -45,6 +61,10 @@ class GameManager:
         self.ai_enable = enable_ai
         if self.ai_enable:
             self.ai_controller = AIController(self.character2, self.character1)
+
+        # 타이머 시작
+        self.time_left = self.game_time
+        self.last_time_update = time.time()
 
         self.running = True
 
@@ -107,6 +127,18 @@ class GameManager:
             self.ko_time += 1
             return
 
+        # 타이머 업데이트
+        current_time = time.time()
+        if current_time - self.last_time_update >= 1.0:  # 1초마다
+            self.time_left -= 1
+            self.last_time_update = current_time
+
+            # 시간 종료 체크
+            if self.time_left <= 0:
+                self.time_left = 0
+                self.end_game_by_time()
+                return
+
         if self.ai_enable:
             self.ai_controller.update()
 
@@ -130,7 +162,7 @@ class GameManager:
             elif self.character2.attacking2:
                 self.character1.get_hit(self.character2.attack2_damage)
 
-        # 승패 체크
+        # 승패 체크 (KO)
         if self.character1.is_dead():
             self.game_over = True
             self.winner = 2
@@ -139,6 +171,20 @@ class GameManager:
             self.game_over = True
             self.winner = 1
             self.ko_time = 0
+
+    def end_game_by_time(self):
+        self.game_over = True
+
+        # HP 비교하여 승자 결정
+        if self.character1.hp > self.character2.hp:
+            self.winner = 1
+        elif self.character2.hp > self.character1.hp:
+            self.winner = 2
+        else:
+            # 동점인 경우 무승부
+            self.winner = 0
+
+        self.ko_time = 0
 
     def draw_hp_bar(self, x, y, hp, max_hp, is_player1=True):
         if self.hp_images is None:
@@ -169,21 +215,46 @@ class GameManager:
             if is_player1:
                 # 왼쪽 정렬
                 hp_x = x - bar_width // 2 + hp_width // 2
-                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height)
+                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height - 4)
             else:
                 # 오른쪽 정렬
                 hp_x = x + bar_width // 2 - hp_width // 2
-                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height)
+                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height - 4)
 
         # 테두리 (흰색)
-        # 상단
-        self.hp_images['white'].draw(x, y + bar_height // 2, bar_width, 2)
-        # 하단
-        self.hp_images['white'].draw(x, y - bar_height // 2, bar_width, 2)
-        # 좌측
+        self.hp_images['white'].draw(x, y + bar_height // 2, bar_width + 4, 2)
+        self.hp_images['white'].draw(x, y - bar_height // 2, bar_width + 4, 2)
         self.hp_images['white'].draw(x - bar_width // 2, y, 2, bar_height)
-        # 우측
         self.hp_images['white'].draw(x + bar_width // 2, y, 2, bar_height)
+
+    def draw_timer(self):
+        if self.font:
+            # 시간이 10초 이하면 빨간색, 아니면 흰색
+            if self.time_left <= 10:
+                self.font.draw(self.width // 2 - 30, 730, f'{self.time_left:02d}', (255, 0, 0))
+            else:
+                self.font.draw(self.width // 2 - 30, 730, f'{self.time_left:02d}', (255, 255, 255))
+
+    def draw_game_over(self):
+        if not self.game_over or self.font is None:
+            return
+
+        # 승자 메시지
+        if self.winner == 1:
+            message = "PLAYER 1 WINS!"
+            self.font.draw(self.width // 2 - 240, self.height // 2 + 50, message, (255, 215, 0))
+        elif self.winner == 2:
+            message = "PLAYER 2 WINS!"
+            self.font.draw(self.width // 2 - 240, self.height // 2 + 50, message, (255, 215, 0))
+        else:
+            message = "DRAW!"
+            self.font.draw(self.width // 2 - 80, self.height // 2 + 50, message, (255, 255, 255))
+
+        # 재시작 안내 (작은 폰트)
+        restart_font = load_font('ENCR10B.TTF', 30) if self.font else None
+        if restart_font:
+            restart_font.draw(self.width // 2 - 180, self.height // 2 - 50,
+                              "Press SPACE to restart", (0, 0, 0))
 
     def draw(self):
         clear_canvas()
@@ -196,10 +267,15 @@ class GameManager:
         self.draw_hp_bar(250, 750, self.character1.hp, self.character1.max_hp, is_player1=True)
         self.draw_hp_bar(950, 750, self.character2.hp, self.character2.max_hp, is_player1=False)
 
+        # 타이머 그리기
+        self.draw_timer()
+
+        # 게임 오버 메시지
+        self.draw_game_over()
+
         update_canvas()
 
     def reset_game(self):
-        """게임 리셋"""
         # HP 초기화
         self.character1.hp = self.character1.max_hp
         self.character2.hp = self.character2.max_hp
@@ -227,6 +303,10 @@ class GameManager:
         self.game_over = False
         self.winner = None
         self.ko_time = 0
+
+        # 타이머 초기화
+        self.time_left = self.game_time
+        self.last_time_update = time.time()
 
     def run(self):
         while self.running:
