@@ -169,17 +169,17 @@ class GameManager:
             if is_player1:
                 # 왼쪽 정렬
                 hp_x = x - bar_width // 2 + hp_width // 2
-                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height - 4)
+                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height)
             else:
                 # 오른쪽 정렬
                 hp_x = x + bar_width // 2 - hp_width // 2
-                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height - 4)
+                self.hp_images[hp_color].draw(hp_x, y, hp_width, bar_height)
 
         # 테두리 (흰색)
         # 상단
-        self.hp_images['white'].draw(x, y + bar_height // 2, bar_width + 4, 2)
+        self.hp_images['white'].draw(x, y + bar_height // 2, bar_width, 2)
         # 하단
-        self.hp_images['white'].draw(x, y - bar_height // 2, bar_width + 4, 2)
+        self.hp_images['white'].draw(x, y - bar_height // 2, bar_width, 2)
         # 좌측
         self.hp_images['white'].draw(x - bar_width // 2, y, 2, bar_height)
         # 우측
