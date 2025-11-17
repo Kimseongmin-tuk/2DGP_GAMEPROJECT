@@ -26,21 +26,33 @@ class Character:
             self.attack2_range = 85
             self.hitbox_width = 100
             self.hitbox_height = 100
+            self.attack_damage = 10  # 일반 공격 데미지
+            self.attack2_damage = 15  # 강 공격 데미지
         elif character_name == 'Shinobi':
             self.attack_range = 110
             self.attack2_range = 130
             self.hitbox_width = 85
             self.hitbox_height = 95
+            self.attack_damage = 8  # 빠르지만 약함
+            self.attack2_damage = 12
         elif character_name == 'Samurai':
             self.attack_range = 120
             self.attack2_range = 100
             self.hitbox_width = 95
             self.hitbox_height = 105
+            self.attack_damage = 12  # 강력함
+            self.attack2_damage = 18
         else:
             self.attack_range = 80
             self.attack2_range = 80
             self.hitbox_width = 100
             self.hitbox_height = 100
+            self.attack_damage = 10
+            self.attack2_damage = 15
+
+        # HP 시스템
+        self.max_hp = 100
+        self.hp = 100
 
         # 이미지 로드
         self.idle_image = load_image(f'{character_name}/Idle.png')
@@ -142,12 +154,15 @@ class Character:
             self.frame = 0
             self.frame_time = 0
 
-    def get_hit(self):
+    def get_hit(self, damage=10):
         if not self.hurt and not self.blocking:
             # 뒤로 이동 중이거나 정지 상태면 방어
             if self.is_moving_backward():
                 self.blocking = True
                 self.hurt = False
+
+                # 방어 시 데미지 50% 감소
+                self.hp -= damage * 0.5
 
                 if self.facing_right:
                     self.x -= 5
@@ -158,14 +173,25 @@ class Character:
                 self.hurt = True
                 self.blocking = False
 
+                # 전체 데미지 적용
+                self.hp -= damage
+
                 # 피격 시 뒤로 밀려남
                 if self.facing_right:
                     self.x -= 10
                 else:
                     self.x += 10
 
+            # HP는 0 이하로 내려가지 않음
+            if self.hp < 0:
+                self.hp = 0
+
             self.frame = 0
             self.frame_time = 0
+
+    def is_dead(self):
+        """사망 체크"""
+        return self.hp <= 0
 
     def is_attacking(self):
         return self.attacking or self.attacking2
@@ -367,14 +393,14 @@ class Character:
 
     def attack(self):
         if (not self.attacking and not self.attacking2 and not self.blocking and
-            not self.hurt and self.attack_cooldown <= 0):
+                not self.hurt and self.attack_cooldown <= 0):
             self.attacking = True
             self.frame = 0
             self.frame_time = 0
 
     def attack2(self):
         if (not self.attacking and not self.attacking2 and not self.blocking and
-            not self.hurt and self.attack_cooldown <= 0):
+                not self.hurt and self.attack_cooldown <= 0):
             self.attacking2 = True
             self.frame_time = 0
             self.frame = 0
