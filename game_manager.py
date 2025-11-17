@@ -19,6 +19,16 @@ class GameManager:
         self.winner = None
         self.ko_time = 0
 
+        # 라운드 시스템 (3판 2선승)
+        self.round_number = 1  # 현재 라운드
+        self.max_rounds = 3  # 최대 라운드
+        self.player1_wins = 0  # P1 승수
+        self.player2_wins = 0  # P2 승수
+        self.round_winner = None  # 현재 라운드 승자
+        self.round_end = False  # 라운드 종료 여부
+        self.round_end_time = 0  # 라운드 종료 후 대기 시간
+        self.match_over = False  # 전체 매치 종료
+
         # 타이머 설정
         self.game_time = 99  # 게임 시간 (초)
         self.time_left = 99  # 남은 시간
@@ -79,7 +89,7 @@ class GameManager:
                     self.running = False
 
                 # 게임 오버 시 재시작
-                if self.game_over and event.key == SDLK_SPACE:
+                if self.match_over and event.key == SDLK_SPACE:
                     self.reset_game()
 
                 # 플레이어1
@@ -122,6 +132,31 @@ class GameManager:
                         self.character2.key_up('right')
 
     def update(self):
+        # 매치가 완전히 끝났으면 업데이트 중지
+        if self.match_over:
+            self.ko_time += 1
+            return
+
+        # 라운드 종료 후 대기 중
+        if self.round_end:
+            self.round_end_time += 1
+
+            # Dead 애니메이션은 계속 진행
+            self.character1.update(opponent_x=self.character2.x)
+            self.character2.update(opponent_x=self.character1.x)
+
+            # 3초 대기 후 다음 라운드 또는 매치 종료
+            if self.round_end_time >= 300:  # 3초 (100 FPS 기준)
+                if self.player1_wins >= 2 or self.player2_wins >= 2:
+                    # 매치 종료 (2승 달성)
+                    self.match_over = True
+                    self.game_over = True
+                    self.winner = 1 if self.player1_wins >= 2 else 2
+                else:
+                    # 다음 라운드 시작
+                    self.start_next_round()
+            return
+
         # 게임 오버 상태면 업데이트 중지
         if self.game_over:
             self.ko_time += 1
@@ -145,13 +180,9 @@ class GameManager:
 
             # Dead 애니메이션이 끝났는지 체크
             if self.character1.dead and self.character1.death_animation_finished:
-                self.game_over = True
-                self.winner = 2
-                self.ko_time = 0
+                self.end_round(2)  # Player 2 승리
             elif self.character2.dead and self.character2.death_animation_finished:
-                self.game_over = True
-                self.winner = 1
-                self.ko_time = 0
+                self.end_round(1)  # Player 1 승리
             return
 
         if self.ai_enable:
@@ -200,19 +231,66 @@ class GameManager:
             self.character2.frame = 0
             self.character2.frame_time = 0
             self.character2.death_animation_finished = False
-            self.winner = 1
+            self.round_winner = 1
         elif self.character2.hp > self.character1.hp:
             # Player 1 패배
             self.character1.dead = True
             self.character1.frame = 0
             self.character1.frame_time = 0
             self.character1.death_animation_finished = False
-            self.winner = 2
+            self.round_winner = 2
         else:
-            # 동점인 경우 즉시 게임 오버 (무승부)
-            self.game_over = True
-            self.winner = 0
-            self.ko_time = 0
+            # 동점인 경우 양쪽 다 패배 (무승부 라운드)
+            self.round_winner = 0
+            self.end_round(0)
+
+    def end_round(self, winner):
+        self.round_end = True
+        self.round_winner = winner
+        self.round_end_time = 0
+
+        # 승수 증가
+        if winner == 1:
+            self.player1_wins += 1
+        elif winner == 2:
+            self.player2_wins += 1
+
+    def start_next_round(self):
+        self.round_number += 1
+        self.round_end = False
+        self.round_winner = None
+        self.round_end_time = 0
+
+        # HP 초기화
+        self.character1.hp = self.character1.max_hp
+        self.character2.hp = self.character2.max_hp
+
+        # 위치 초기화
+        self.character1.x = self.width // 4
+        self.character2.x = self.width * 3 // 4
+        self.character1.y = self.character1.ground_y
+        self.character2.y = self.character2.ground_y
+
+        # 상태 초기화
+        self.character1.hurt = False
+        self.character1.blocking = False
+        self.character1.attacking = False
+        self.character1.attacking2 = False
+        self.character1.jumping = False
+        self.character1.dead = False
+        self.character1.death_animation_finished = False
+
+        self.character2.hurt = False
+        self.character2.blocking = False
+        self.character2.attacking = False
+        self.character2.attacking2 = False
+        self.character2.jumping = False
+        self.character2.dead = False
+        self.character2.death_animation_finished = False
+
+        # 타이머 초기화
+        self.time_left = self.game_time
+        self.last_time_update = time.time()
 
     def draw_hp_bar(self, x, y, hp, max_hp, is_player1=True):
         if self.hp_images is None:
@@ -263,26 +341,79 @@ class GameManager:
             else:
                 self.font.draw(self.width // 2 - 30, 730, f'{self.time_left:02d}', (255, 255, 255))
 
-    def draw_game_over(self):
-        if not self.game_over or self.font is None:
+    def draw_round_info(self):
+        if self.font:
+            # 라운드 번호 (중앙 하단)
+            round_text = f'ROUND {self.round_number}'
+            self.font.draw(self.width // 2 - 100, 670, round_text, (255, 255, 255))
+
+            # 승수 표시 (동그라미)
+            self.draw_win_indicators()
+
+    def draw_win_indicators(self):
+        if self.hp_images is None:
             return
 
-        # 승자 메시지
+        circle_size = 20
+        spacing = 30
+
+        # Player 1 승수 (왼쪽)
+        for i in range(2):  # 최대 2승
+            x = 100 + i * spacing
+            y = 720
+            if i < self.player1_wins:
+                # 승리한 라운드 (노란색)
+                self.hp_images['yellow'].draw(x, y, circle_size, circle_size)
+            else:
+                # 아직 승리하지 않은 라운드 (회색)
+                self.hp_images['dark_red'].draw(x, y, circle_size, circle_size)
+
+        # Player 2 승수 (오른쪽)
+        for i in range(2):
+            x = 1100 - i * spacing
+            y = 720
+            if i < self.player2_wins:
+                # 승리한 라운드 (노란색)
+                self.hp_images['yellow'].draw(x, y, circle_size, circle_size)
+            else:
+                # 아직 승리하지 않은 라운드 (회색)
+                self.hp_images['dark_red'].draw(x, y, circle_size, circle_size)
+
+    def draw_round_result(self):
+        """라운드 결과 표시"""
+        if self.font is None:
+            return
+
+        if self.round_winner == 1:
+            message = "PLAYER 1 WINS ROUND!"
+            self.font.draw(self.width // 2 - 250, self.height // 2, message, (255, 215, 0))
+        elif self.round_winner == 2:
+            message = "PLAYER 2 WINS ROUND!"
+            self.font.draw(self.width // 2 - 250, self.height // 2, message, (255, 215, 0))
+        else:
+            message = "DRAW!"
+            self.font.draw(self.width // 2 - 80, self.height // 2, message, (255, 255, 255))
+
+    def draw_game_over(self):
+        """매치 종료 화면 그리기"""
+        if not self.match_over or self.font is None:
+            return
+
+        # 최종 승자 메시지
         if self.winner == 1:
             message = "PLAYER 1 WINS!"
             self.font.draw(self.width // 2 - 240, self.height // 2 + 50, message, (255, 215, 0))
         elif self.winner == 2:
             message = "PLAYER 2 WINS!"
             self.font.draw(self.width // 2 - 240, self.height // 2 + 50, message, (255, 215, 0))
-        else:
-            message = "DRAW!"
-            self.font.draw(self.width // 2 - 80, self.height // 2 + 50, message, (255, 255, 255))
 
-        # 재시작 안내 (작은 폰트)
-        restart_font = load_font('ENCR10B.TTF', 30) if self.font else None
-        if restart_font:
+        # 재시작 안내
+        try:
+            restart_font = load_font('ENCR10B.TTF', 30)
             restart_font.draw(self.width // 2 - 180, self.height // 2 - 50,
                               "Press SPACE to restart", (0, 0, 0))
+        except:
+            pass
 
     def draw(self):
         clear_canvas()
@@ -298,13 +429,29 @@ class GameManager:
         # 타이머 그리기
         self.draw_timer()
 
-        # 게임 오버 메시지
-        self.draw_game_over()
+        # 라운드 정보 그리기
+        self.draw_round_info()
+
+        # 라운드 종료 메시지
+        if self.round_end and not self.match_over:
+            self.draw_round_result()
+
+        # 매치 종료 메시지
+        if self.match_over:
+            self.draw_game_over()
 
         update_canvas()
 
     def reset_game(self):
-        """게임 리셋"""
+        # 라운드 초기화
+        self.round_number = 1
+        self.player1_wins = 0
+        self.player2_wins = 0
+        self.round_winner = None
+        self.round_end = False
+        self.round_end_time = 0
+        self.match_over = False
+
         # HP 초기화
         self.character1.hp = self.character1.max_hp
         self.character2.hp = self.character2.max_hp
