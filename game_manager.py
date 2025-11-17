@@ -380,16 +380,15 @@ class GameManager:
                 self.hp_images['dark_red'].draw(x, y, circle_size, circle_size)
 
     def draw_round_result(self):
-        """라운드 결과 표시"""
         if self.font is None:
             return
 
         if self.round_winner == 1:
             message = "PLAYER 1 WINS ROUND!"
-            self.font.draw(self.width // 2 - 250, self.height // 2, message, (255, 215, 0))
+            self.font.draw(self.width // 2 - 320, self.height // 2, message, (255, 215, 0))
         elif self.round_winner == 2:
             message = "PLAYER 2 WINS ROUND!"
-            self.font.draw(self.width // 2 - 250, self.height // 2, message, (255, 215, 0))
+            self.font.draw(self.width // 2 - 320, self.height // 2, message, (255, 215, 0))
         else:
             message = "DRAW!"
             self.font.draw(self.width // 2 - 80, self.height // 2, message, (255, 255, 255))
