@@ -198,7 +198,6 @@ class Character:
             self.frame_time = 0
 
     def is_dead(self):
-        """사망 체크"""
         return self.hp <= 0
 
     def is_attacking(self):
@@ -310,15 +309,26 @@ class Character:
         return False
 
     def update(self, opponent_x=None):
-        # 사망 애니메이션 중이면 애니메이션만 실행
+        # 사망 애니메이션 중이면
         if self.dead:
-            self.frame_time += 1
-            if self.frame_time >= 10:
-                self.frame += 1
-                self.frame_time = 0
-                if self.frame >= self.dead_frame_count:
-                    self.frame = self.dead_frame_count - 1  # 마지막 프레임 유지
-                    self.death_animation_finished = True
+            # 바닥에 떨어지는 중력 적용
+            if self.y > self.ground_y:
+                self.y += self.jump_speed
+                self.jump_speed -= self.gravity
+
+                if self.y <= self.ground_y:
+                    self.y = self.ground_y
+                    self.jump_speed = 0
+
+            # 바닥에 도달한 후에만 Dead 애니메이션 재생
+            if self.y <= self.ground_y:
+                self.frame_time += 1
+                if self.frame_time >= 10:
+                    self.frame += 1
+                    self.frame_time = 0
+                    if self.frame >= self.dead_frame_count:
+                        self.frame = self.dead_frame_count - 1  # 마지막 프레임 유지
+                        self.death_animation_finished = True
             return  # 다른 업데이트 중지
 
         # 공격 쿨타임 감소
@@ -431,19 +441,34 @@ class Character:
             flip = 'h'
 
         if self.dead:
-            # 사망 애니메이션 출력
-            if self.facing_right:
-                self.dead_image.clip_draw(
-                    self.frame * self.dead_frame_width, 0,
-                    self.dead_frame_width, self.frame_height,
-                    self.x, self.y, 200, 200
-                )
+            # 바닥에 도달하지 않았으면 Hurt 이미지 (떨어지는 모습)
+            if self.y > self.ground_y:
+                if self.facing_right:
+                    self.hurt_image.clip_draw(
+                        (self.hurt_frame_count - 1) * self.hurt_frame_width, 0,
+                        self.hurt_frame_width, self.frame_height,
+                        self.x, self.y, 200, 200
+                    )
+                else:
+                    self.hurt_image.clip_composite_draw(
+                        (self.hurt_frame_count - 1) * self.hurt_frame_width, 0,
+                        self.hurt_frame_width, self.frame_height,
+                        0, flip, self.x, self.y, 200, 200
+                    )
             else:
-                self.dead_image.clip_composite_draw(
-                    self.frame * self.dead_frame_width, 0,
-                    self.dead_frame_width, self.frame_height,
-                    0, flip, self.x, self.y, 200, 200
-                )
+                # 바닥에 도달하면 Dead 애니메이션 출력
+                if self.facing_right:
+                    self.dead_image.clip_draw(
+                        self.frame * self.dead_frame_width, 0,
+                        self.dead_frame_width, self.frame_height,
+                        self.x, self.y, 200, 200
+                    )
+                else:
+                    self.dead_image.clip_composite_draw(
+                        self.frame * self.dead_frame_width, 0,
+                        self.dead_frame_width, self.frame_height,
+                        0, flip, self.x, self.y, 200, 200
+                    )
         elif self.blocking:
             # 방어 이미지 출력
             if self.facing_right:
