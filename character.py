@@ -63,6 +63,7 @@ class Character:
         self.jump_image = load_image(f'{character_name}/Jump.png')
         self.hurt_image = load_image(f'{character_name}/Hurt.png')
         self.shield_image = load_image(f'{character_name}/Shield.png')
+        self.dead_image = load_image(f'{character_name}/Dead.png')
         self.frame = 0
 
         # 캐릭터별 프레임 수 설정
@@ -72,24 +73,28 @@ class Character:
             self.jump_frame_count = 10
             self.hurt_frame_count = 3
             self.shield_frame_count = 2
+            self.dead_frame_count = 3
         elif character_name == 'Shinobi':
             self.attack_frame_count = 5
             self.attack2_frame_count = 4
             self.jump_frame_count = 12
             self.hurt_frame_count = 2
             self.shield_frame_count = 4
+            self.dead_frame_count = 4
         elif character_name == 'Samurai':
             self.attack_frame_count = 6
             self.attack2_frame_count = 4
             self.jump_frame_count = 12
             self.hurt_frame_count = 2
             self.shield_frame_count = 2
+            self.dead_frame_count = 3
         else:
             self.attack_frame_count = 4
             self.attack2_frame_count = 4
             self.jump_frame_count = 10
             self.hurt_frame_count = 3
             self.shield_frame_count = 2
+            self.dead_frame_count = 4
 
         # 이미지 프레임 크기 계산
         self.idle_frame_width = self.idle_image.w // 6
@@ -100,6 +105,7 @@ class Character:
         self.jump_frame_width = self.jump_image.w // self.jump_frame_count
         self.hurt_frame_width = self.hurt_image.w // self.hurt_frame_count
         self.shield_frame_width = self.shield_image.w // self.shield_frame_count
+        self.dead_frame_width = self.dead_image.w // self.dead_frame_count
         self.frame_height = self.walk_image.h
 
         # 행동 상태 초기화
@@ -111,6 +117,8 @@ class Character:
         self.jumping = False
         self.hurt = False
         self.blocking = False  # 막기 상태 추가
+        self.dead = False  # 사망 상태
+        self.death_animation_finished = False  # 사망 애니메이션 완료
 
         # 더블탭 감지를 위한 변수
         self.last_key_time = {'left': 0, 'right': 0}
@@ -302,6 +310,17 @@ class Character:
         return False
 
     def update(self, opponent_x=None):
+        # 사망 애니메이션 중이면 애니메이션만 실행
+        if self.dead:
+            self.frame_time += 1
+            if self.frame_time >= 10:
+                self.frame += 1
+                self.frame_time = 0
+                if self.frame >= self.dead_frame_count:
+                    self.frame = self.dead_frame_count - 1  # 마지막 프레임 유지
+                    self.death_animation_finished = True
+            return  # 다른 업데이트 중지
+
         # 공격 쿨타임 감소
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
@@ -411,7 +430,21 @@ class Character:
         else:
             flip = 'h'
 
-        if self.blocking:
+        if self.dead:
+            # 사망 애니메이션 출력
+            if self.facing_right:
+                self.dead_image.clip_draw(
+                    self.frame * self.dead_frame_width, 0,
+                    self.dead_frame_width, self.frame_height,
+                    self.x, self.y, 200, 200
+                )
+            else:
+                self.dead_image.clip_composite_draw(
+                    self.frame * self.dead_frame_width, 0,
+                    self.dead_frame_width, self.frame_height,
+                    0, flip, self.x, self.y, 200, 200
+                )
+        elif self.blocking:
             # 방어 이미지 출력
             if self.facing_right:
                 self.shield_image.clip_draw(

@@ -137,7 +137,22 @@ class GameManager:
             if self.time_left <= 0:
                 self.time_left = 0
                 self.end_game_by_time()
-                return
+
+        # Dead 애니메이션이 진행 중이면 캐릭터 업데이트만 (다른 로직 스킵)
+        if self.character1.dead or self.character2.dead:
+            self.character1.update(opponent_x=self.character2.x)
+            self.character2.update(opponent_x=self.character1.x)
+
+            # Dead 애니메이션이 끝났는지 체크
+            if self.character1.dead and self.character1.death_animation_finished:
+                self.game_over = True
+                self.winner = 2
+                self.ko_time = 0
+            elif self.character2.dead and self.character2.death_animation_finished:
+                self.game_over = True
+                self.winner = 1
+                self.ko_time = 0
+            return
 
         if self.ai_enable:
             self.ai_controller.update()
@@ -163,28 +178,41 @@ class GameManager:
                 self.character1.get_hit(self.character2.attack2_damage)
 
         # 승패 체크 (KO)
-        if self.character1.is_dead():
-            self.game_over = True
-            self.winner = 2
-            self.ko_time = 0
-        elif self.character2.is_dead():
-            self.game_over = True
-            self.winner = 1
-            self.ko_time = 0
+        if self.character1.is_dead() and not self.character1.dead:
+            # Player 1 사망
+            self.character1.dead = True
+            self.character1.frame = 0
+            self.character1.frame_time = 0
+            self.character1.death_animation_finished = False
+
+        if self.character2.is_dead() and not self.character2.dead:
+            # Player 2 사망
+            self.character2.dead = True
+            self.character2.frame = 0
+            self.character2.frame_time = 0
+            self.character2.death_animation_finished = False
 
     def end_game_by_time(self):
-        self.game_over = True
-
-        # HP 비교하여 승자 결정
+        # HP 비교하여 패자 결정 후 Dead 애니메이션
         if self.character1.hp > self.character2.hp:
+            # Player 2 패배
+            self.character2.dead = True
+            self.character2.frame = 0
+            self.character2.frame_time = 0
+            self.character2.death_animation_finished = False
             self.winner = 1
         elif self.character2.hp > self.character1.hp:
+            # Player 1 패배
+            self.character1.dead = True
+            self.character1.frame = 0
+            self.character1.frame_time = 0
+            self.character1.death_animation_finished = False
             self.winner = 2
         else:
-            # 동점인 경우 무승부
+            # 동점인 경우 즉시 게임 오버 (무승부)
+            self.game_over = True
             self.winner = 0
-
-        self.ko_time = 0
+            self.ko_time = 0
 
     def draw_hp_bar(self, x, y, hp, max_hp, is_player1=True):
         if self.hp_images is None:
@@ -276,6 +304,7 @@ class GameManager:
         update_canvas()
 
     def reset_game(self):
+        """게임 리셋"""
         # HP 초기화
         self.character1.hp = self.character1.max_hp
         self.character2.hp = self.character2.max_hp
@@ -292,12 +321,16 @@ class GameManager:
         self.character1.attacking = False
         self.character1.attacking2 = False
         self.character1.jumping = False
+        self.character1.dead = False
+        self.character1.death_animation_finished = False
 
         self.character2.hurt = False
         self.character2.blocking = False
         self.character2.attacking = False
         self.character2.attacking2 = False
         self.character2.jumping = False
+        self.character2.dead = False
+        self.character2.death_animation_finished = False
 
         # 게임 상태 초기화
         self.game_over = False
