@@ -50,7 +50,11 @@ class AIController:
 
         if self.opponent.is_attacking():
             # 상대가 공격 중이면 회피
-            if random.random() < 0.7:
+            evade_rand = random.random()
+            if evade_rand < 0.5:
+                self.current_action = 'back_dash'
+                self.action_duration = 0.25
+            elif evade_rand < 0.85:
                 self.current_action = 'back'
                 self.action_duration = 0.3
             else:
@@ -64,9 +68,12 @@ class AIController:
             elif rand < self.aggressiveness:
                 self.current_action = 'attack2'
                 self.action_duration = 0.4
-            else:
+            elif rand < self.aggressiveness + (1 - self.aggressiveness) * 0.5:
                 self.current_action = 'back'
                 self.action_duration = 0.2
+            else:
+                self.current_action = 'back_dash'
+                self.action_duration = 0.25
 
     def decide_mid_range_action(self):
         rand = random.random()
@@ -116,6 +123,8 @@ class AIController:
             self.move_forward()
         elif self.current_action == 'back':
             self.move_backward()
+        elif self.current_action == 'back_dash':
+            self.perform_back_dash()
         elif self.current_action == 'dash':
             self.dash_forward()
         elif self.current_action == 'dash_attack':
@@ -179,6 +188,11 @@ class AIController:
             self.character.jump()
 
         self.move_forward()
+
+    def perform_back_dash(self):
+        # 캐릭터가 이미 백대쉬 중이 아니면 실행
+        if not getattr(self.character, 'back_dashing', False):
+            self.character.back_dash()
 
     def cleaning(self):
         self.stop_all_movement()
