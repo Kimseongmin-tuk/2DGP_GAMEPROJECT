@@ -2,6 +2,7 @@ from pico2d import *
 from character import Character
 from ai_controller import *
 import time
+import random
 
 
 class GameManager:
@@ -33,6 +34,15 @@ class GameManager:
         self.game_time = 99  # 게임 시간 (초)
         self.time_left = 99  # 남은 시간
         self.last_time_update = 0  # 마지막 시간 업데이트
+
+        # KO 연출 관련 변수
+        self.stop_frames = 0
+        self.slow_motion_frames = 0
+        self.shake_frames = 0
+        self.shake_magnitude = 0
+
+        # KO 텍스트 표시 시간
+        self.ko_text_frames = 0
 
         # HP바 이미지
         self.hp_images = {}
@@ -137,6 +147,11 @@ class GameManager:
             self.ko_time += 1
             return
 
+        # KO 시 잠깐 멈춤 효과
+        if self.stop_frames > 0:
+            self.stop_frames -= 1
+            return
+
         # 라운드 종료 후 대기 중
         if self.round_end:
             self.round_end_time += 1
@@ -161,6 +176,9 @@ class GameManager:
         if self.game_over:
             self.ko_time += 1
             return
+
+        if self.slow_motion_frames > 0:
+            self.slow_motion_frames -= 1
 
         # 타이머 업데이트
         current_time = time.time()
@@ -214,6 +232,9 @@ class GameManager:
 
         # 승패 체크 (KO)
         if self.character1.is_dead() and not self.character1.dead:
+            # KO 연출 시작
+            self.trigger_ko_effect()
+
             # Player 1 사망
             self.character1.dead = True
             self.character1.frame = 0
@@ -221,11 +242,28 @@ class GameManager:
             self.character1.death_animation_finished = False
 
         if self.character2.is_dead() and not self.character2.dead:
+            # KO 연출 시작
+            self.trigger_ko_effect()
+
             # Player 2 사망
             self.character2.dead = True
             self.character2.frame = 0
             self.character2.frame_time = 0
             self.character2.death_animation_finished = False
+
+    def trigger_ko_effect(self):
+        # 히트스톱: 약 0.15초 (100 FPS 기준 15프레임)
+        self.stop_frames = 15
+
+        # 슬로모션: 약 1.5초
+        self.slow_motion_frames = 150
+
+        # 화면 흔들림: 약 0.3초
+        self.shake_frames = 30
+
+        # KO 텍스트: 약 0.9초
+        self.ko_text_frames = 90
+
 
     def end_game_by_time(self):
         # HP 비교하여 패자 결정 후 Dead 애니메이션
@@ -295,6 +333,12 @@ class GameManager:
         # 타이머 초기화
         self.time_left = self.game_time
         self.last_time_update = time.time()
+
+        # KO 연출 변수 초기화
+        self.stop_frames = 0
+        self.slow_motion_frames = 0
+        self.shake_frames = 0
+        self.ko_text_frames = 0
 
     def draw_hp_bar(self, x, y, hp, max_hp, is_player1=True):
         if self.hp_images is None:
@@ -398,7 +442,6 @@ class GameManager:
             self.font.draw(self.width // 2 - 80, self.height // 2, message, (255, 255, 255))
 
     def draw_game_over(self):
-        """매치 종료 화면 그리기"""
         if not self.match_over or self.font is None:
             return
 
@@ -418,12 +461,49 @@ class GameManager:
         except:
             pass
 
+    def draw_ko_text(self):
+        if self.font is None:
+            return
+
+        if self.ko_text_frames > 0:
+            self.ko_text_frames -= 1
+
+            text = "K.O."
+
+            self.font.draw(self.width // 2 - 120,
+                           self.height // 2 + 100,
+                           text,
+                           (255, 215, 0))
+
     def draw(self):
         clear_canvas()
 
-        # 캐릭터 그리기
-        self.character1.draw()
-        self.character2.draw()
+        # 화면 흔들림 오프셋 계산
+        shake_x = 0
+        shake_y = 0
+        if self.shake_frames > 0:
+            self.shake_frames -= 1
+            shake_x = random.randint(-self.shake_magnitude, self.shake_magnitude)
+            shake_y = random.randint(-self.shake_magnitude, self.shake_magnitude)
+
+        # 캐릭터 그리기 (그리는 동안만 위치를 잠깐 이동시켰다가 되돌림)
+        if shake_x != 0 or shake_y != 0:
+            orig_x1, orig_y1 = self.character1.x, self.character1.y
+            orig_x2, orig_y2 = self.character2.x, self.character2.y
+
+            self.character1.x += shake_x
+            self.character1.y += shake_y
+            self.character2.x += shake_x
+            self.character2.y += shake_y
+
+            self.character1.draw()
+            self.character2.draw()
+
+            self.character1.x, self.character1.y = orig_x1, orig_y1
+            self.character2.x, self.character2.y = orig_x2, orig_y2
+        else:
+            self.character1.draw()
+            self.character2.draw()
 
         # HP 바 그리기
         self.draw_hp_bar(250, 750, self.character1.hp, self.character1.max_hp, is_player1=True)
@@ -442,6 +522,9 @@ class GameManager:
         # 매치 종료 메시지
         if self.match_over:
             self.draw_game_over()
+
+        # KO 텍스트 그리기
+        self.draw_ko_text()
 
         update_canvas()
 
@@ -491,12 +574,23 @@ class GameManager:
         self.time_left = self.game_time
         self.last_time_update = time.time()
 
+        # KO 연출 변수 초기화
+        self.stop_frames = 0
+        self.slow_motion_frames = 0
+        self.shake_frames = 0
+        self.ko_text_frames = 0
+
     def run(self):
         while self.running:
             self.handle_events()
             self.update()
             self.draw()
-            delay(0.01)
+
+            # 슬로모션 중이면 프레임 간격을 조금 늘려서 느리게 보이게
+            if self.slow_motion_frames > 0:
+                delay(0.02)  # 평소보다 2배 느리게
+            else:
+                delay(0.01)
 
     def close(self):
         if self.ai_enable:
