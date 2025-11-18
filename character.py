@@ -276,6 +276,10 @@ class Character:
             self.moving_right = True
 
     def back_dash(self):
+        if (self.back_dashing or self.attacking or self.attacking2 or self.hurt or
+                self.blocking or self.jumping or self.dead):
+            return False
+
         # 대쉬 상태 세팅
         self.back_dashing = True
         self.back_dash_frames = 0
@@ -283,6 +287,7 @@ class Character:
         self.moving_left = False
         self.moving_right = False
         self.running = False
+        return True
 
     def key_up(self, direction):
         if direction == 'left':
