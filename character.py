@@ -233,6 +233,12 @@ class Character:
         self.dead = False  # 사망 상태
         self.death_animation_finished = False  # 사망 애니메이션 완료
 
+        # 뒤로 대쉬 상태
+        self.back_dashing = False
+        self.back_dash_frames = 0
+        self.back_dash_total_frames = 10  # 대쉬에 사용할 프레임 수
+        self.back_dash_speed = 9  # 프레임당 이동 거리
+
         # 더블탭 감지를 위한 변수
         self.last_key_time = {'left': 0, 'right': 0}
         self.double_tap_threshold = 0.3
@@ -247,8 +253,20 @@ class Character:
         current_time = time.time()
 
         if not self.jumping and not self.hurt and not self.blocking:
+            # 더블 탭 판단
             if current_time - self.last_key_time[direction] < self.double_tap_threshold:
-                self.running = True
+                # 현재 바라보는 방향 기준으로 앞으로/뒤로 판별
+                is_backward = (
+                    (self.facing_right and direction == 'left') or
+                    (not self.facing_right and direction == 'right')
+                )
+
+                if is_backward:
+                    # 뒤로 이동 키를 두 번 빠르게 입력하면 뒤로 대쉬
+                    self.back_dash()
+                else:
+                    # 앞으로 이동 키 더블 탭이면 달리기 (기존 동작 유지)
+                    self.running = True
 
         self.last_key_time[direction] = current_time
 
@@ -256,6 +274,15 @@ class Character:
             self.moving_left = True
         elif direction == 'right':
             self.moving_right = True
+
+    def back_dash(self):
+        # 대쉬 상태 세팅
+        self.back_dashing = True
+        self.back_dash_frames = 0
+        # 대쉬 중에는 일반 이동/달리기 입력과 섞이지 않도록 정지
+        self.moving_left = False
+        self.moving_right = False
+        self.running = False
 
     def key_up(self, direction):
         if direction == 'left':
@@ -466,8 +493,22 @@ class Character:
                 self.jump_speed = 0
                 self.running = False
 
-        # 좌우 이동
-        if not self.attacking and not self.attacking2 and not self.blocking and not self.hurt:
+        # 뒤로 대쉬 처리 (짧은 시간 동안 빠르게 이동)
+        if self.back_dashing:
+            if self.facing_right:
+                self.x -= self.back_dash_speed
+            else:
+                self.x += self.back_dash_speed
+
+            self.back_dash_frames += 1
+
+            if self.back_dash_frames >= self.back_dash_total_frames:
+                self.back_dashing = False
+
+        # 좌우 이동 (대쉬 중이 아닐 때만)
+        if (not self.back_dashing and
+                not self.attacking and not self.attacking2 and
+                not self.blocking and not self.hurt):
             if self.is_moving_backward():
                 self.running = False
 
