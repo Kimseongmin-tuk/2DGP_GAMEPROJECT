@@ -194,19 +194,23 @@ class GameManager:
         # 캐릭터 충돌 처리
         self.character1.resolve_collision(self.character2)
 
-        # 플레이어1이 플레이어2를 공격했는지 확인
+        # 플레이어1이 플레이어2를 공격했는지 확인 (한 공격당 한 번만 데미지)
         if self.character2.check_hit(self.character1):
-            if self.character1.attacking:
+            if self.character1.attacking and not self.character1.attack1_hit_applied:
                 self.character2.get_hit(self.character1.attack_damage)
-            elif self.character1.attacking2:
+                self.character1.attack1_hit_applied = True
+            elif self.character1.attacking2 and not self.character1.attack2_hit_applied:
                 self.character2.get_hit(self.character1.attack2_damage)
+                self.character1.attack2_hit_applied = True
 
-        # 플레이어2가 플레이어1을 공격했는지 확인
+        # 플레이어2가 플레이어1을 공격했는지 확인 (한 공격당 한 번만 데미지)
         if self.character1.check_hit(self.character2):
-            if self.character2.attacking:
+            if self.character2.attacking and not self.character2.attack1_hit_applied:
                 self.character1.get_hit(self.character2.attack_damage)
-            elif self.character2.attacking2:
+                self.character2.attack1_hit_applied = True
+            elif self.character2.attacking2 and not self.character2.attack2_hit_applied:
                 self.character1.get_hit(self.character2.attack2_damage)
+                self.character2.attack2_hit_applied = True
 
         # 승패 체크 (KO)
         if self.character1.is_dead() and not self.character1.dead:

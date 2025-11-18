@@ -224,6 +224,9 @@ class Character:
         self.running = False
         self.attacking = False
         self.attacking2 = False
+        # 한 번의 공격 모션당 한 번만 데미지를 주기 위한 플래그
+        self.attack1_hit_applied = False
+        self.attack2_hit_applied = False
         self.jumping = False
         self.hurt = False
         self.blocking = False  # 막기 상태 추가
@@ -534,6 +537,7 @@ class Character:
         if (not self.attacking and not self.attacking2 and not self.blocking and
                 not self.hurt and self.attack_cooldown <= 0):
             self.attacking = True
+            self.attack1_hit_applied = False  # 새 공격 시작: 아직 맞춘 적 없음
             self.frame = 0
             self.frame_time = 0
 
@@ -541,6 +545,7 @@ class Character:
         if (not self.attacking and not self.attacking2 and not self.blocking and
                 not self.hurt and self.attack_cooldown <= 0):
             self.attacking2 = True
+            self.attack2_hit_applied = False  # 새 공격 시작: 아직 맞춘 적 없음
             self.frame_time = 0
             self.frame = 0
 
