@@ -238,6 +238,8 @@ class Character:
         self.back_dash_frames = 0
         self.back_dash_total_frames = 10  # 대쉬에 사용할 프레임 수
         self.back_dash_speed = 9  # 프레임당 이동 거리
+        self.back_dash_cooldown = 0  # 백대쉬 쿨다운
+        self.back_dash_cooldown_time = 50  # 백대쉬 사이 딜레이
 
         # 더블탭 감지를 위한 변수
         self.last_key_time = {'left': 0, 'right': 0}
@@ -276,7 +278,8 @@ class Character:
             self.moving_right = True
 
     def back_dash(self):
-        if (self.back_dashing or self.attacking or self.attacking2 or self.hurt or
+        if (self.back_dashing or self.back_dash_cooldown > 0 or
+                self.attacking or self.attacking2 or self.hurt or
                 self.blocking or self.jumping or self.dead):
             return False
 
@@ -287,6 +290,7 @@ class Character:
         self.moving_left = False
         self.moving_right = False
         self.running = False
+        self.back_dash_cooldown = self.back_dash_cooldown_time
         return True
 
     def key_up(self, direction):
@@ -479,6 +483,8 @@ class Character:
         # 공격 쿨타임 감소
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
+        if self.back_dash_cooldown > 0:
+            self.back_dash_cooldown -= 1
 
         # 항상 상대와 마주보도록 설정
         if opponent_x is not None:
