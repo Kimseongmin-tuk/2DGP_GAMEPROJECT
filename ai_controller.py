@@ -2,7 +2,7 @@ import random
 import time
 
 class AIController:
-    def __init__(self, character, opponent):
+    def __init__(self, character, opponent, difficulty='normal'):
         self.character = character # 컴퓨터가 조종할 캐릭터
         self.opponent = opponent # 상대 캐릭터
 
@@ -14,10 +14,25 @@ class AIController:
         self.current_action = None
         self.action_duration = 0
 
-        # 컴퓨터 성향
-        self.aggressiveness = 0.7 # 공격 성향 (0~1)
-        self.defensiveness = 0.3 # 방어 성향 (0~1)
-        self.reaction_time = 0.3 # 반응 속도 (초)
+        # 난이도에 따른 성향 설정
+        if difficulty == 'easy':
+            self.aggressiveness = 0.4  # 소극적
+            self.defensiveness = 0.5   # 방어적
+            self.reaction_time = 0.5   # 느린 반응
+            self.next_action_time_min = 0.5
+            self.next_action_time_max = 1.0
+        elif difficulty == 'hard':
+            self.aggressiveness = 0.9  # 매우 공격적
+            self.defensiveness = 0.2   # 방어 거의 안함
+            self.reaction_time = 0.1   # 빠른 반응
+            self.next_action_time_min = 0.2
+            self.next_action_time_max = 0.4
+        else:  # normal
+            self.aggressiveness = 0.7
+            self.defensiveness = 0.3
+            self.reaction_time = 0.3
+            self.next_action_time_min = 0.3
+            self.next_action_time_max = 0.7
 
         # 마지막 행동 시간 기록
         self.last_action_time = time.time()
@@ -29,7 +44,7 @@ class AIController:
         if self.action_timer >= self.next_action_time:
             self.decide_action()
             self.action_timer = 0
-            self.next_action_time = random.uniform(0.3, 0.7)
+            self.next_action_time = random.uniform(self.next_action_time_min, self.next_action_time_max)
 
         # 현재 행동 수행
         self.perform_action()
