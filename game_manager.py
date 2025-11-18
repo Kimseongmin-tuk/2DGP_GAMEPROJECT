@@ -118,9 +118,9 @@ class GameManager:
         self.current_stage_image = self.stage_images.get(self.current_stage_name, None)
 
         # 캐릭터 생성
-        self.character1 = Character(character1_name, self.width // 4, self.height // 2, character_speed,
+        self.character1 = Character(character1_name, self.width // 4, 100, character_speed,
                                     facing_right=True)
-        self.character2 = Character(character2_name, self.width * 3 // 4, self.height // 2, character_speed,
+        self.character2 = Character(character2_name, self.width * 3 // 4, 100, character_speed,
                                     facing_right=False)
 
         if self.ai_enable:
