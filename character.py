@@ -20,7 +20,7 @@ class Character:
         self.gravity = 0.8
         self.jump_power = 15
 
-        # 캐릭터별 히트박스 / 공격 박스 기본 값 설정
+        # 캐릭터별 히트박스 / 공격 박스 및 공격 속도(쿨타임) 기본 값 설정
         if character_name == 'Fighter':
             # 기본 파라미터
             self.attack_range = 90
@@ -29,6 +29,7 @@ class Character:
             self.hitbox_height = 100
             self.attack_damage = 10  # 일반 공격 데미지
             self.attack2_damage = 15  # 강 공격 데미지
+            self.attack_cooldown_time = 30  # 파이터: 중간 정도 공격 속도 (약 0.3초)
 
             # 몸통 바운딩 박스 (조금 더 세밀하게 설정)
             self.body_hitbox = {
@@ -61,8 +62,9 @@ class Character:
             self.attack2_range = 130
             self.hitbox_width = 85
             self.hitbox_height = 95
-            self.attack_damage = 8  # 빠르지만 약함
-            self.attack2_damage = 12
+            self.attack_damage = 6  # 빠르지만 약함
+            self.attack2_damage = 9
+            self.attack_cooldown_time = 18  # 시노비: 빠른 공격 속도 (약 0.18초)
 
             # 몸통은 조금 더 슬림하게
             self.body_hitbox = {
@@ -95,8 +97,9 @@ class Character:
             self.attack2_range = 100
             self.hitbox_width = 95
             self.hitbox_height = 105
-            self.attack_damage = 12  # 강력함
-            self.attack2_damage = 18
+            self.attack_damage = 16  # 강력함
+            self.attack2_damage = 20
+            self.attack_cooldown_time = 50  # 사무라이: 느리지만 강한 공격 (약 0.6초)
 
             # 사무라이 몸통은 약간 크고 위로
             self.body_hitbox = {
@@ -132,6 +135,7 @@ class Character:
             self.hitbox_height = 100
             self.attack_damage = 10
             self.attack2_damage = 15
+            self.attack_cooldown_time = 25
 
             self.body_hitbox = {
                 'offset_x': 0,
@@ -235,7 +239,6 @@ class Character:
 
         # 공격 쿨타임 설정
         self.attack_cooldown = 0  # 남은 쿨타임 (프레임)
-        self.attack_cooldown_time = 20  # 쿨타임 시간 (20프레임 = 0.2초)
 
     def key_down(self, direction):
         current_time = time.time()
