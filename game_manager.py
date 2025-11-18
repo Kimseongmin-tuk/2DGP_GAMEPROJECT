@@ -50,13 +50,21 @@ class GameManager:
         # 폰트 (나중에 로드)
         self.font = None
 
-    def init(self, character1_name='Fighter', character2_name='Samurai', character_speed=3, enable_ai=True):
+        # 캐릭터 선택용 목록
+        self.character_list = ['Fighter', 'Shinobi', 'Samurai']
+
+    def init(self,
+             character1_name='Fighter',
+             character2_name='Samurai',
+             character_speed=3,
+             enable_ai=True,
+             use_character_select=True):
         # 윈도우 생성
         open_canvas(self.width, self.height)
 
         # 폰트 로드
         try:
-            self.font = load_font('ENCR10B.TTF', 60)
+            self.font = load_font('font/NanumGothic.ttf', 60)
         except:
             print("폰트 로드 실패 - 기본 폰트 사용")
             self.font = None
@@ -72,13 +80,18 @@ class GameManager:
             print("HP바 이미지 로드 실패 - 기본 그리기 사용")
             self.hp_images = None
 
+        self.ai_enable = enable_ai
+
+        # 🔹 캐릭터 선택 화면 (폰트가 있을 때만)
+        if use_character_select and self.font is not None:
+            character1_name, character2_name = self.character_select_screen()
+
         # 캐릭터 초기 위치 설정
         self.character1 = Character(character1_name, self.width // 4, self.height // 2, character_speed,
                                     facing_right=True)
         self.character2 = Character(character2_name, self.width * 3 // 4, self.height // 2, character_speed,
                                     facing_right=False)
 
-        self.ai_enable = enable_ai
         if self.ai_enable:
             self.ai_controller = AIController(self.character2, self.character1)
 
@@ -263,7 +276,6 @@ class GameManager:
 
         # KO 텍스트: 약 0.9초
         self.ko_text_frames = 90
-
 
     def end_game_by_time(self):
         # HP 비교하여 패자 결정 후 Dead 애니메이션
@@ -596,3 +608,99 @@ class GameManager:
         if self.ai_enable:
             self.ai_controller.cleaning()
         close_canvas()
+
+    def character_select_screen(self):
+        """간단한 캐릭터 선택 화면: P1, P2 캐릭터 선택"""
+        characters = self.character_list
+        p1_index = 0
+        p2_index = 1 if len(characters) > 1 else 0
+
+        selecting_p1 = True
+        running = True
+
+        while running:
+            clear_canvas()
+
+            if self.font:
+                # 제목
+                self.font.draw(self.width // 2 - 280,
+                               self.height - 150,
+                               'CHARACTER SELECT',
+                               (255, 255, 255))
+
+                # Player 1 영역
+                self.font.draw(150,
+                               self.height // 2 + 80,
+                               'PLAYER 1',
+                               (255, 255, 0))
+                self.font.draw(150,
+                               self.height // 2,
+                               characters[p1_index],
+                               (255, 255, 255))
+
+                # Player 2 영역
+                self.font.draw(self.width - 350,
+                               self.height // 2 + 80,
+                               'PLAYER 2',
+                               (0, 255, 255))
+                self.font.draw(self.width - 350,
+                               self.height // 2,
+                               characters[p2_index],
+                               (255, 255, 255))
+
+                # 현재 선택중인 쪽에 화살표 표시
+                if selecting_p1:
+                    self.font.draw(80,
+                                   self.height // 2,
+                                   '->',
+                                   (255, 255, 0))
+                else:
+                    self.font.draw(self.width - 420,
+                                   self.height // 2,
+                                   '->',
+                                   (0, 255, 255))
+
+                # 조작 설명
+                self.font.draw(0,
+                               150,
+                               '<- -> : 캐릭터 변경   ENTER : 확정   ESC : 종료',
+                               (0, 0, 0))
+
+            update_canvas()
+
+            events = get_events()
+            for e in events:
+                if e.type == SDL_QUIT:
+                    close_canvas()
+                    exit(0)
+
+                if e.type == SDL_KEYDOWN:
+                    if e.key == SDLK_ESCAPE:
+                        close_canvas()
+                        exit(0)
+
+                    # 왼쪽/오른쪽으로 캐릭터 변경
+                    if e.key == SDLK_LEFT:
+                        if selecting_p1:
+                            p1_index = (p1_index - 1) % len(characters)
+                        else:
+                            p2_index = (p2_index - 1) % len(characters)
+
+                    elif e.key == SDLK_RIGHT:
+                        if selecting_p1:
+                            p1_index = (p1_index + 1) % len(characters)
+                        else:
+                            p2_index = (p2_index + 1) % len(characters)
+
+                    # ENTER / SPACE 로 확정
+                    elif e.key == SDLK_RETURN or e.key == SDLK_SPACE:
+                        if selecting_p1:
+                            # 이제 P2 선택 단계로 넘어감
+                            selecting_p1 = False
+                        else:
+                            # 둘 다 고르면 선택 종료
+                            running = False
+
+            delay(0.01)
+
+        return characters[p1_index], characters[p2_index]
