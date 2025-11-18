@@ -39,9 +39,9 @@ class MenuManager:
 
         # 폰트 로드
         try:
-            self.font_large = load_font('ENCR10B.TTF', 80)
-            self.font_medium = load_font('ENCR10B.TTF', 50)
-            self.font_small = load_font('ENCR10B.TTF', 30)
+            self.font_large = load_font('Font/ENCR10B.TTF', 80)
+            self.font_medium = load_font('Font/ENCR10B.TTF', 50)
+            self.font_small = load_font('Font/ENCR10B.TTF', 30)
         except:
             print("폰트 로드 실패")
 
@@ -180,18 +180,18 @@ class MenuManager:
 
         if self.font_medium:
             # 1P 옵션
-            color1 = (255, 255, 0) if self.cursor_index == 0 else (150, 150, 150)
+            color1 = (255, 255, 0) if self.cursor_index == 0 else (255, 255, 255)
             self.font_medium.draw(self.width // 2 - 150, 400,
                                   "1 PLAYER (vs AI)", color1)
 
             # 2P 옵션
-            color2 = (255, 255, 0) if self.cursor_index == 1 else (150, 150, 150)
+            color2 = (255, 255, 0) if self.cursor_index == 1 else (255, 255, 255)
             self.font_medium.draw(self.width // 2 - 150, 300,
                                   "2 PLAYERS", color2)
 
         if self.font_small:
             self.font_small.draw(self.width // 2 - 200, 100,
-                                 "Arrow Keys + Enter to Select", (200, 200, 200))
+                                 "Arrow Keys + Enter to Select", (255, 255, 255))
 
     def draw_character_select(self):
         if self.font_large:
@@ -214,7 +214,7 @@ class MenuManager:
                 if i == self.cursor_index and self.font_small:
                     desc = self.get_character_description(char)
                     self.font_small.draw(self.width // 2 - 200, y_start - i * 80 - 40,
-                                         desc, (200, 200, 200))
+                                         desc, (255, 255, 255))
 
         # P1이 이미 선택했으면 표시
         if self.player1_character and self.font_small:
