@@ -20,14 +20,42 @@ class Character:
         self.gravity = 0.8
         self.jump_power = 15
 
-        # 캐릭터별 히트박스 설정
+        # 캐릭터별 히트박스 / 공격 박스 기본 값 설정
         if character_name == 'Fighter':
+            # 기본 파라미터
             self.attack_range = 90
             self.attack2_range = 85
             self.hitbox_width = 100
             self.hitbox_height = 100
             self.attack_damage = 10  # 일반 공격 데미지
             self.attack2_damage = 15  # 강 공격 데미지
+
+            # 몸통 바운딩 박스 (조금 더 세밀하게 설정)
+            self.body_hitbox = {
+                'offset_x': 0,
+                'offset_y': 5,   # 살짝 위로
+                'width': 90,
+                'height': 110
+            }
+
+            # 공격 1 히트박스
+            self.attack1_hitbox = {
+                'offset_x_right': 60,   # 오른쪽 공격 시 중심에서 +60
+                'offset_x_left': -60,   # 왼쪽 공격 시 중심에서 -60
+                'offset_y': 0,
+                'width': self.attack_range,
+                'height': 80
+            }
+
+            # 공격 2 히트박스 (조금 더 멀고 조금 더 큼)
+            self.attack2_hitbox = {
+                'offset_x_right': 65,
+                'offset_x_left': -65,
+                'offset_y': 0,
+                'width': self.attack2_range,
+                'height': 90
+            }
+
         elif character_name == 'Shinobi':
             self.attack_range = 110
             self.attack2_range = 130
@@ -35,6 +63,33 @@ class Character:
             self.hitbox_height = 95
             self.attack_damage = 8  # 빠르지만 약함
             self.attack2_damage = 12
+
+            # 몸통은 조금 더 슬림하게
+            self.body_hitbox = {
+                'offset_x': 0,
+                'offset_y': 5,
+                'width': 80,
+                'height': 100
+            }
+
+            # 빠른 공격 1 : 짧고 얇은 범위
+            self.attack1_hitbox = {
+                'offset_x_right': 55,
+                'offset_x_left': -55,
+                'offset_y': -5,
+                'width': self.attack_range,
+                'height': 75
+            }
+
+            # 긴 공격 2 : 전방으로 많이 뻗음
+            self.attack2_hitbox = {
+                'offset_x_right': 70,
+                'offset_x_left': -70,
+                'offset_y': 0,
+                'width': self.attack2_range,
+                'height': 85
+            }
+
         elif character_name == 'Samurai':
             self.attack_range = 120
             self.attack2_range = 100
@@ -42,13 +97,64 @@ class Character:
             self.hitbox_height = 105
             self.attack_damage = 12  # 강력함
             self.attack2_damage = 18
+
+            # 사무라이 몸통은 약간 크고 위로
+            self.body_hitbox = {
+                'offset_x': 0,
+                'offset_y': 8,
+                'width': 95,
+                'height': 115
+            }
+
+            # 공격 1 : 기본 베기
+            self.attack1_hitbox = {
+                'offset_x_right': 65,
+                'offset_x_left': -65,
+                'offset_y': 0,
+                'width': self.attack_range,
+                'height': 90
+            }
+
+            # 공격 2 : 조금 더 위/아래까지 커버
+            self.attack2_hitbox = {
+                'offset_x_right': 60,
+                'offset_x_left': -60,
+                'offset_y': 5,
+                'width': self.attack2_range,
+                'height': 100
+            }
+
         else:
+            # 기타 캐릭터 기본값
             self.attack_range = 80
             self.attack2_range = 80
             self.hitbox_width = 100
             self.hitbox_height = 100
             self.attack_damage = 10
             self.attack2_damage = 15
+
+            self.body_hitbox = {
+                'offset_x': 0,
+                'offset_y': 0,
+                'width': self.hitbox_width,
+                'height': self.hitbox_height
+            }
+
+            self.attack1_hitbox = {
+                'offset_x_right': self.attack_range // 2,
+                'offset_x_left': -self.attack_range // 2,
+                'offset_y': 0,
+                'width': self.attack_range,
+                'height': self.hitbox_height
+            }
+
+            self.attack2_hitbox = {
+                'offset_x_right': self.attack2_range // 2,
+                'offset_x_left': -self.attack2_range // 2,
+                'offset_y': 0,
+                'width': self.attack2_range,
+                'height': self.hitbox_height
+            }
 
         # HP 시스템
         self.max_hp = 100
@@ -208,28 +314,28 @@ class Character:
             return None
 
         if self.attacking:
-            current_range = self.attack_range
+            cfg = self.attack1_hitbox
         else:
-            current_range = self.attack2_range
+            cfg = self.attack2_hitbox
 
         if self.facing_right:
-            hitbox_x = self.x + current_range // 2
+            hitbox_x = self.x + cfg['offset_x_right']
         else:
-            hitbox_x = self.x - current_range // 2
+            hitbox_x = self.x + cfg['offset_x_left']
 
         return {
             'x': hitbox_x,
-            'y': self.y,
-            'width': current_range,
-            'height': self.hitbox_height
+            'y': self.y + cfg['offset_y'],
+            'width': cfg['width'],
+            'height': cfg['height']
         }
 
     def get_body_hitbox(self):
         return {
-            'x': self.x,
-            'y': self.y,
-            'width': self.hitbox_width,
-            'height': self.hitbox_height
+            'x': self.x + self.body_hitbox['offset_x'],
+            'y': self.y + self.body_hitbox['offset_y'],
+            'width': self.body_hitbox['width'],
+            'height': self.body_hitbox['height']
         }
 
     def check_hit(self, opponent_hitbox):
@@ -253,8 +359,9 @@ class Character:
         if self.jumping or opponent.jumping:
             return False
 
-        collision_width_self = self.hitbox_width * 0.4
-        collision_width_opponent = opponent.hitbox_width * 0.4
+        # 캐릭터별 몸통 바운딩 박스를 기준으로 충돌 폭 계산
+        collision_width_self = self.body_hitbox['width'] * 0.4
+        collision_width_opponent = opponent.body_hitbox['width'] * 0.4
 
         distance = abs(self.x - opponent.x)
         min_distance = (collision_width_self + collision_width_opponent) / 2
