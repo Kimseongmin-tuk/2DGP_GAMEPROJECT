@@ -311,39 +311,56 @@ class Character:
             self.frame_time = 0
 
     def get_hit(self, damage=10):
-        if not self.hurt and not self.blocking:
-            # 뒤로 이동 중이거나 정지 상태면 방어
-            if self.is_moving_backward():
-                self.blocking = True
-                self.hurt = False
+        # 이미 피격 모션 중이거나 막는 중이면 무시
+        if self.hurt or self.blocking or self.dead:
+            return
 
-                # 방어 시 데미지 50% 감소
-                self.hp -= damage * 0.5
+        # 피격 직전의 움직임 방향을 기억해서
+        # '뒤로 이동 중이면 가드' 판정을 유지
+        was_moving_backward = self.is_moving_backward()
 
-                if self.facing_right:
-                    self.x -= 5
-                else:
-                    self.x += 5
+        # 피격 순간에는 이동/달리기/백대쉬 상태를 모두 정지
+        # -> P1, CPU 모두 동일한 조건에서 넉백 적용
+        self.moving_left = False
+        self.moving_right = False
+        self.running = False
+        self.back_dashing = False
+        self.back_dash_frames = 0
+
+        if was_moving_backward:
+            # 뒤로 이동 중이면 자동 가드
+            self.blocking = True
+            self.hurt = False
+
+            # 방어 시 데미지 50% 감소
+            self.hp -= damage * 0.5
+
+            # 가드 넉백 (살짝 밀림)
+            if self.facing_right:
+                self.x -= 5
             else:
-                # 앞으로 이동 중이면 피격
-                self.hurt = True
-                self.blocking = False
+                self.x += 5
+        else:
+            # 정면/전진 중 피격
+            self.blocking = False
+            self.hurt = True
 
-                # 전체 데미지 적용
-                self.hp -= damage
+            # 전체 데미지 적용
+            self.hp -= damage
 
-                # 피격 시 뒤로 밀려남
-                if self.facing_right:
-                    self.x -= 10
-                else:
-                    self.x += 10
+            # 피격 넉백 (공격자 반대 방향으로 밀림)
+            if self.facing_right:
+                self.x -= 10
+            else:
+                self.x += 10
 
-            # HP는 0 이하로 내려가지 않음
-            if self.hp < 0:
-                self.hp = 0
+        # HP는 0 아래로 내려가지 않게
+        if self.hp < 0:
+            self.hp = 0
 
-            self.frame = 0
-            self.frame_time = 0
+        # 피격 애니메이션 초기화
+        self.frame = 0
+        self.frame_time = 0
 
     def is_dead(self):
         return self.hp <= 0
