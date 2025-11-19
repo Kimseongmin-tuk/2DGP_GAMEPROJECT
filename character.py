@@ -34,15 +34,15 @@ class Character:
             # 몸통 바운딩 박스 (조금 더 세밀하게 설정)
             self.body_hitbox = {
                 'offset_x': 0,
-                'offset_y': 5,   # 살짝 위로
+                'offset_y': 5,  # 살짝 위로
                 'width': 90,
                 'height': 110
             }
 
             # 공격 1 히트박스
             self.attack1_hitbox = {
-                'offset_x_right': 60,   # 오른쪽 공격 시 중심에서 +60
-                'offset_x_left': -60,   # 왼쪽 공격 시 중심에서 -60
+                'offset_x_right': 60,  # 오른쪽 공격 시 중심에서 +60
+                'offset_x_left': -60,  # 왼쪽 공격 시 중심에서 -60
                 'offset_y': 0,
                 'width': self.attack_range,
                 'height': 80
@@ -241,6 +241,11 @@ class Character:
         self.back_dash_cooldown = 0  # 백대쉬 쿨다운
         self.back_dash_cooldown_time = 50  # 백대쉬 사이 딜레이
 
+        # 피격 전 이동 상태 저장 (피격 후 복원용)
+        self.saved_moving_left = False
+        self.saved_moving_right = False
+        self.saved_running = False
+
         # 더블탭 감지를 위한 변수
         self.last_key_time = {'left': 0, 'right': 0}
         self.double_tap_threshold = 0.3
@@ -259,8 +264,8 @@ class Character:
             if current_time - self.last_key_time[direction] < self.double_tap_threshold:
                 # 현재 바라보는 방향 기준으로 앞으로/뒤로 판별
                 is_backward = (
-                    (self.facing_right and direction == 'left') or
-                    (not self.facing_right and direction == 'right')
+                        (self.facing_right and direction == 'left') or
+                        (not self.facing_right and direction == 'right')
                 )
 
                 if is_backward:
@@ -318,6 +323,11 @@ class Character:
         # 피격 직전의 움직임 방향을 기억해서
         # '뒤로 이동 중이면 가드' 판정을 유지
         was_moving_backward = self.is_moving_backward()
+
+        # 피격 전 이동 상태 저장 (피격/가드 후 복원용)
+        self.saved_moving_left = self.moving_left
+        self.saved_moving_right = self.moving_right
+        self.saved_running = self.running
 
         # 피격 순간에는 이동/달리기/백대쉬 상태를 모두 정지
         # -> P1, CPU 모두 동일한 조건에서 넉백 적용
@@ -564,6 +574,11 @@ class Character:
                 if self.frame >= self.shield_frame_count:
                     self.frame = 0
                     self.blocking = False
+
+                    # 방어 후 저장된 이동 상태 복원
+                    self.moving_left = self.saved_moving_left
+                    self.moving_right = self.saved_moving_right
+                    self.running = self.saved_running
         elif self.hurt:
             # 피격 애니메이션
             if self.frame_time >= 10:
@@ -572,6 +587,11 @@ class Character:
                 if self.frame >= self.hurt_frame_count:
                     self.frame = 0
                     self.hurt = False
+
+                    # 피격 후 저장된 이동 상태 복원
+                    self.moving_left = self.saved_moving_left
+                    self.moving_right = self.saved_moving_right
+                    self.running = self.saved_running
         elif self.jumping:
             if self.frame_time >= 8:
                 self.frame = (self.frame + 1) % self.jump_frame_count
