@@ -294,7 +294,7 @@ class MenuManager:
 
         if self.font_medium:
             # 맵 목록
-            y_start = 400
+            y_start = 500
             for i, map_name in enumerate(self.maps):
                 color = (255, 255, 0) if i == self.cursor_index else (150, 150, 150)
                 x = self.get_centered_x(map_name, 50)
@@ -307,7 +307,7 @@ class MenuManager:
                 summary += f"AI: {self.ai_difficulty.upper()} | "
             summary += f"P2: {self.player2_character}"
             x_summary = self.get_centered_x(summary, 30)
-            self.font_small.draw(x_summary, 150, summary, (200, 200, 200))
+            self.font_small.draw(x_summary, 100, summary, (200, 200, 200))
 
     def get_character_description(self, char):
         """캐릭터 설명"""
