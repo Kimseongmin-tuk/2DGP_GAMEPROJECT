@@ -40,6 +40,14 @@ class GameManager:
         # 폰트 (나중에 로드)
         self.font = None
 
+    def get_text_width(self, text, font_size):
+        """텍스트를 중앙 정렬하기 위한 x 좌표 계산"""
+        return len(text) * font_size * 0.6
+
+    def get_centered_x(self, text, font_size):
+        text_width = self.get_text_width(text, font_size)
+        return int((self.width - text_width) / 2)
+
     def init(self, character1_name='Fighter', character2_name='Samurai', character_speed=3, enable_ai=True,
              ai_difficulty='normal'):
         # 윈도우 생성
@@ -352,18 +360,21 @@ class GameManager:
     def draw_timer(self):
         """타이머 그리기"""
         if self.font:
+            timer_text = f'{self.time_left:02d}'
+            x = self.get_centered_x(timer_text, 60)
             # 시간이 10초 이하면 빨간색, 아니면 흰색
             if self.time_left <= 10:
-                self.font.draw(self.width // 2 - 30, 730, f'{self.time_left:02d}', (255, 0, 0))
+                self.font.draw(x, 730, timer_text, (255, 0, 0))
             else:
-                self.font.draw(self.width // 2 - 30, 730, f'{self.time_left:02d}', (255, 255, 255))
+                self.font.draw(x, 730, timer_text, (255, 255, 255))
 
     def draw_round_info(self):
         """라운드 정보 및 승수 표시"""
         if self.font:
             # 라운드 번호 (중앙 하단)
             round_text = f'ROUND {self.round_number}'
-            self.font.draw(self.width // 2 - 100, 670, round_text, (255, 255, 255))
+            x = self.get_centered_x(round_text, 60)
+            self.font.draw(x, 670, round_text, (255, 255, 255))
 
             # 승수 표시 (동그라미)
             self.draw_win_indicators()
@@ -405,13 +416,16 @@ class GameManager:
 
         if self.round_winner == 1:
             message = "PLAYER 1 WINS ROUND!"
-            self.font.draw(self.width // 2 - 250, self.height // 2, message, (255, 215, 0))
+            x = self.get_centered_x(message, 60)
+            self.font.draw(x, self.height // 2, message, (255, 215, 0))
         elif self.round_winner == 2:
             message = "PLAYER 2 WINS ROUND!"
-            self.font.draw(self.width // 2 - 250, self.height // 2, message, (255, 215, 0))
+            x = self.get_centered_x(message, 60)
+            self.font.draw(x, self.height // 2, message, (255, 215, 0))
         else:
             message = "DRAW!"
-            self.font.draw(self.width // 2 - 80, self.height // 2, message, (255, 255, 255))
+            x = self.get_centered_x(message, 60)
+            self.font.draw(x, self.height // 2, message, (255, 255, 255))
 
     def draw_game_over(self):
         """매치 종료 화면 그리기"""
@@ -421,16 +435,19 @@ class GameManager:
         # 최종 승자 메시지
         if self.winner == 1:
             message = "PLAYER 1 WINS!"
-            self.font.draw(self.width // 2 - 200, self.height // 2 + 50, message, (255, 215, 0))
+            x = self.get_centered_x(message, 60)
+            self.font.draw(x, self.height // 2 + 50, message, (255, 215, 0))
         elif self.winner == 2:
             message = "PLAYER 2 WINS!"
-            self.font.draw(self.width // 2 - 200, self.height // 2 + 50, message, (255, 215, 0))
+            x = self.get_centered_x(message, 60)
+            self.font.draw(x, self.height // 2 + 50, message, (255, 215, 0))
 
         # 재시작 안내
         try:
             restart_font = load_font('Font/ENCR10B.TTF', 30)
-            restart_font.draw(self.width // 2 - 150, self.height // 2 - 50,
-                              "Press SPACE to restart", (200, 200, 200))
+            restart_text = "Press SPACE to restart"
+            x_restart = self.get_centered_x(restart_text, 30)
+            restart_font.draw(x_restart, self.height // 2 - 50, restart_text, (200, 200, 200))
         except:
             pass
 

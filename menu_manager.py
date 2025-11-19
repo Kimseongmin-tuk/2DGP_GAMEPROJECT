@@ -34,6 +34,14 @@ class MenuManager:
         self.background = None
         self.character_images = {}
 
+    def get_text_width(self, text, font_size):
+        """텍스트를 중앙 정렬하기 위한 x 좌표 계산"""
+        return len(text) * font_size * 0.6
+
+    def get_centered_x(self, text, font_size):
+        text_width = self.get_text_width(text, font_size)
+        return int((self.width - text_width) / 2)
+
     def init(self):
         """메뉴 초기화"""
         open_canvas(self.width, self.height)
@@ -197,23 +205,27 @@ class MenuManager:
         """모드 선택 화면"""
         if self.font_large:
             # 제목
-            self.font_large.draw(self.width // 2 - 250, 600,
-                                 "SELECT MODE", (255, 255, 255))
+            title = "SELECT MODE"
+            x = self.get_centered_x(title, 80)
+            self.font_large.draw(x, 600, title, (255, 255, 255))
 
         if self.font_medium:
             # 1P 옵션
+            text1 = "1 PLAYER (vs AI)"
+            x1 = self.get_centered_x(text1, 50)
             color1 = (255, 255, 0) if self.cursor_index == 0 else (150, 150, 150)
-            self.font_medium.draw(self.width // 2 - 150, 400,
-                                  "1 PLAYER (vs AI)", color1)
+            self.font_medium.draw(x1, 400, text1, color1)
 
             # 2P 옵션
+            text2 = "2 PLAYERS"
+            x2 = self.get_centered_x(text2, 50)
             color2 = (255, 255, 0) if self.cursor_index == 1 else (150, 150, 150)
-            self.font_medium.draw(self.width // 2 - 150, 300,
-                                  "2 PLAYERS", color2)
+            self.font_medium.draw(x2, 300, text2, color2)
 
         if self.font_small:
-            self.font_small.draw(self.width // 2 - 200, 100,
-                                 "Arrow Keys + Enter to Select", (200, 200, 200))
+            instruction = "Arrow Keys + Enter to Select"
+            x_inst = self.get_centered_x(instruction, 30)
+            self.font_small.draw(x_inst, 100, instruction, (200, 200, 200))
 
     def draw_character_select(self):
         """캐릭터 선택 화면"""
@@ -223,60 +235,63 @@ class MenuManager:
                 title = "PLAYER 1 SELECT"
             else:
                 title = "PLAYER 2 SELECT"
-            self.font_large.draw(self.width // 2 - 300, 650, title, (255, 255, 255))
+            x = self.get_centered_x(title, 80)
+            self.font_large.draw(x, 650, title, (255, 255, 255))
 
         if self.font_medium:
             # 캐릭터 목록
             y_start = 450
             for i, char in enumerate(self.characters):
                 color = (255, 255, 0) if i == self.cursor_index else (150, 150, 150)
-                self.font_medium.draw(self.width // 2 - 100, y_start - i * 80,
-                                      char, color)
+                x = self.get_centered_x(char, 50)
+                self.font_medium.draw(x, y_start - i * 80, char, color)
 
                 # 캐릭터 설명
                 if i == self.cursor_index and self.font_small:
                     desc = self.get_character_description(char)
-                    self.font_small.draw(self.width // 2 - 200, y_start - i * 80 - 40,
-                                         desc, (200, 200, 200))
+                    x_desc = self.get_centered_x(desc, 30)
+                    self.font_small.draw(x_desc, y_start - i * 80 - 40, desc, (200, 200, 200))
 
         # P1이 이미 선택했으면 표시
         if self.player1_character and self.font_small:
-            self.font_small.draw(100, 100,
-                                 f"P1: {self.player1_character}", (255, 215, 0))
+            p1_text = f"P1: {self.player1_character}"
+            self.font_small.draw(100, 100, p1_text, (255, 215, 0))
 
     def draw_difficulty_select(self):
         """난이도 선택 화면"""
         if self.font_large:
-            self.font_large.draw(self.width // 2 - 350, 600,
-                                 "SELECT DIFFICULTY", (255, 255, 255))
+            title = "SELECT DIFFICULTY"
+            x = self.get_centered_x(title, 80)
+            self.font_large.draw(x, 600, title, (255, 255, 255))
 
         if self.font_medium:
             # 난이도 목록
             y_start = 400
             for i, diff in enumerate(self.difficulties):
                 color = (255, 255, 0) if i == self.cursor_index else (150, 150, 150)
-                self.font_medium.draw(self.width // 2 - 100, y_start - i * 80,
-                                      diff, color)
+                x = self.get_centered_x(diff, 50)
+                self.font_medium.draw(x, y_start - i * 80, diff, color)
 
                 # 난이도 설명
                 if i == self.cursor_index and self.font_small:
                     desc = self.get_difficulty_description(diff)
-                    self.font_small.draw(self.width // 2 - 200, y_start - i * 80 - 40,
-                                         desc, (200, 200, 200))
+                    x_desc = self.get_centered_x(desc, 30)
+                    self.font_small.draw(x_desc, y_start - i * 80 - 40, desc, (200, 200, 200))
 
     def draw_map_select(self):
         """맵 선택 화면"""
         if self.font_large:
-            self.font_large.draw(self.width // 2 - 250, 600,
-                                 "SELECT STAGE", (255, 255, 255))
+            title = "SELECT STAGE"
+            x = self.get_centered_x(title, 80)
+            self.font_large.draw(x, 600, title, (255, 255, 255))
 
         if self.font_medium:
             # 맵 목록
             y_start = 400
             for i, map_name in enumerate(self.maps):
                 color = (255, 255, 0) if i == self.cursor_index else (150, 150, 150)
-                self.font_medium.draw(self.width // 2 - 150, y_start - i * 80,
-                                      map_name, color)
+                x = self.get_centered_x(map_name, 50)
+                self.font_medium.draw(x, y_start - i * 80, map_name, color)
 
         if self.font_small:
             # 선택된 정보 요약
@@ -284,7 +299,8 @@ class MenuManager:
             if self.game_mode == '1P':
                 summary += f"AI: {self.ai_difficulty.upper()} | "
             summary += f"P2: {self.player2_character}"
-            self.font_small.draw(self.width // 2 - 300, 150, summary, (200, 200, 200))
+            x_summary = self.get_centered_x(summary, 30)
+            self.font_small.draw(x_summary, 150, summary, (200, 200, 200))
 
     def get_character_description(self, char):
         """캐릭터 설명"""
