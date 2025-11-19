@@ -28,7 +28,8 @@ def main():
                 character1_name=selections['player1_character'],
                 character2_name=selections['player2_character'],
                 enable_ai=selections['enable_ai'],
-                ai_difficulty=selections['ai_difficulty']
+                ai_difficulty=selections['ai_difficulty'],
+                selected_map=selections['selected_map']
             )
 
             game.run()

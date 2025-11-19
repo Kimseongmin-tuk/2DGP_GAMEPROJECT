@@ -14,6 +14,10 @@ class GameManager:
         self.ai_controller = None
         self.ai_enable = False
 
+        # 배경 이미지
+        self.background = None
+        self.selected_map = 'airport_map'
+
         # 게임 상태
         self.game_over = False
         self.winner = None
@@ -48,10 +52,35 @@ class GameManager:
         text_width = self.get_text_width(text, font_size)
         return int((self.width - text_width) / 2)
 
+    def load_background(self):
+        """선택된 맵의 배경 이미지 로드"""
+        map_files = {
+            'airport_map': 'Background/airport_map.png',
+            'koreanTown_map': 'Background/koreanTown_map.png',
+            'night_map': 'Background/night_map.png',
+            'racing_map': 'Background/racing_map.png',
+            'street_map': 'Background/street_map.png'
+        }
+
+        map_file = map_files.get(self.selected_map, 'Background/airport_map.png')
+
+        try:
+            self.background = load_image(map_file)
+            print(f"배경 로드 성공: {map_file}")
+        except:
+            print(f"배경 로드 실패: {map_file} - 배경 없이 진행")
+            self.background = None
+
     def init(self, character1_name='Fighter', character2_name='Samurai', character_speed=3, enable_ai=True,
-             ai_difficulty='normal'):
+             ai_difficulty='normal', selected_map='airport_map'):
         # 윈도우 생성
         open_canvas(self.width, self.height)
+
+        # 선택된 맵 저장
+        self.selected_map = selected_map
+
+        # 배경 이미지 로드
+        self.load_background()
 
         # 폰트 로드
         try:
@@ -454,7 +483,11 @@ class GameManager:
     def draw(self):
         clear_canvas()
 
-        # 승리 화면일 때 승리 배경
+        # 배경 그리기 (가장 먼저)
+        if self.background:
+            self.background.draw(self.width // 2, self.height // 2)
+
+        # 승리 화면일 때 승리 배경 (배경 위에 반투명으로)
         if self.match_over and self.victory_bg:
             self.victory_bg.draw(self.width // 2, self.height // 2)
 

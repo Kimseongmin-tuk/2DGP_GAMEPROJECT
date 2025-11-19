@@ -28,7 +28,7 @@ class MenuManager:
         # 선택 가능한 옵션들
         self.characters = ['Fighter', 'Shinobi', 'Samurai']
         self.difficulties = ['Easy', 'Normal', 'Hard']
-        self.maps = ['Training Ground', 'Dojo', 'Castle']
+        self.maps = ['Airport', 'Korean Town', 'Night Street', 'Racing Track', 'City Street']
 
         # 이미지들 (나중에 로드)
         self.background = None
@@ -174,8 +174,15 @@ class MenuManager:
             self.cursor_index = 0
 
         elif self.menu_state == 'map_select':
-            # 맵 선택 (현재는 선택만 하고 실제로는 사용 안 함)
-            self.selected_map = self.maps[self.cursor_index]
+            # 맵 선택 (실제 맵 ID로 저장)
+            map_ids = {
+                0: 'airport_map',
+                1: 'koreanTown_map',
+                2: 'night_map',
+                3: 'racing_map',
+                4: 'street_map'
+            }
+            self.selected_map = map_ids[self.cursor_index]
             return 'start_game'  # 게임 시작!
 
         return 'continue'
