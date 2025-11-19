@@ -108,9 +108,9 @@ class GameManager:
             self.victory_bg = None
 
         # 캐릭터 초기 위치 설정
-        self.character1 = Character(character1_name, self.width // 4, self.height // 2, character_speed,
+        self.character1 = Character(character1_name, self.width // 4, 150, character_speed,
                                     facing_right=True)
-        self.character2 = Character(character2_name, self.width * 3 // 4, self.height // 2, character_speed,
+        self.character2 = Character(character2_name, self.width * 3 // 4, 150, character_speed,
                                     facing_right=False)
 
         self.ai_enable = enable_ai
