@@ -63,6 +63,13 @@ class GameManager:
             print("HP바 이미지 로드 실패 - 기본 그리기 사용")
             self.hp_images = None
 
+        # 승리 배경 로드
+        try:
+            self.victory_bg = load_image('Background/victory_background.png')
+        except:
+            print("승리 배경 로드 실패")
+            self.victory_bg = None
+
         # 캐릭터 초기 위치 설정
         self.character1 = Character(character1_name, self.width // 4, self.height // 2, character_speed,
                                     facing_right=True)
@@ -421,7 +428,7 @@ class GameManager:
 
         # 재시작 안내
         try:
-            restart_font = load_font('ENCR10B.TTF', 30)
+            restart_font = load_font('Font/ENCR10B.TTF', 30)
             restart_font.draw(self.width // 2 - 150, self.height // 2 - 50,
                               "Press SPACE to restart", (200, 200, 200))
         except:
@@ -429,6 +436,10 @@ class GameManager:
 
     def draw(self):
         clear_canvas()
+
+        # 승리 화면일 때 승리 배경
+        if self.match_over and self.victory_bg:
+            self.victory_bg.draw(self.width // 2, self.height // 2)
 
         # 캐릭터 그리기
         self.character1.draw()

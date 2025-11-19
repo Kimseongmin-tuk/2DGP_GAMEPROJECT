@@ -35,6 +35,7 @@ class MenuManager:
         self.character_images = {}
 
     def init(self):
+        """메뉴 초기화"""
         open_canvas(self.width, self.height)
 
         # 폰트 로드
@@ -45,6 +46,16 @@ class MenuManager:
         except:
             print("폰트 로드 실패")
 
+        # 배경 이미지 로드
+        try:
+            self.menu_bg = load_image('Background/menu_background.png')
+            self.character_select_bg = load_image('Background/character_select_background.png')
+            print("배경 이미지 로드 완료")
+        except:
+            print("배경 이미지 로드 실패 - 기본 배경 사용")
+            self.menu_bg = None
+            self.character_select_bg = None
+
         # 캐릭터 미리보기 이미지 로드 시도
         try:
             for char in self.characters:
@@ -53,6 +64,7 @@ class MenuManager:
             print("캐릭터 이미지 로드 실패")
 
     def handle_events(self):
+        """키 입력 처리"""
         events = get_events()
 
         for event in events:
@@ -98,6 +110,7 @@ class MenuManager:
         return 'continue'
 
     def get_max_cursor_index(self):
+        """현재 메뉴의 최대 커서 인덱스"""
         if self.menu_state == 'mode_select':
             return 1  # 1P, 2P
         elif self.menu_state == 'character_select':
@@ -109,6 +122,7 @@ class MenuManager:
         return 0
 
     def confirm_selection(self):
+        """선택 확정"""
         if self.menu_state == 'mode_select':
             # 모드 선택
             if self.cursor_index == 0:
@@ -159,7 +173,14 @@ class MenuManager:
         return 'continue'
 
     def draw(self):
+        """메뉴 그리기"""
         clear_canvas()
+
+        # 배경 그리기
+        if self.menu_state in ['mode_select', 'difficulty_select', 'map_select'] and self.menu_bg:
+            self.menu_bg.draw(self.width // 2, self.height // 2)
+        elif self.menu_state == 'character_select' and self.character_select_bg:
+            self.character_select_bg.draw(self.width // 2, self.height // 2)
 
         if self.menu_state == 'mode_select':
             self.draw_mode_select()
@@ -173,6 +194,7 @@ class MenuManager:
         update_canvas()
 
     def draw_mode_select(self):
+        """모드 선택 화면"""
         if self.font_large:
             # 제목
             self.font_large.draw(self.width // 2 - 250, 600,
@@ -180,20 +202,21 @@ class MenuManager:
 
         if self.font_medium:
             # 1P 옵션
-            color1 = (255, 255, 0) if self.cursor_index == 0 else (255, 255, 255)
+            color1 = (255, 255, 0) if self.cursor_index == 0 else (150, 150, 150)
             self.font_medium.draw(self.width // 2 - 150, 400,
                                   "1 PLAYER (vs AI)", color1)
 
             # 2P 옵션
-            color2 = (255, 255, 0) if self.cursor_index == 1 else (255, 255, 255)
+            color2 = (255, 255, 0) if self.cursor_index == 1 else (150, 150, 150)
             self.font_medium.draw(self.width // 2 - 150, 300,
                                   "2 PLAYERS", color2)
 
         if self.font_small:
             self.font_small.draw(self.width // 2 - 200, 100,
-                                 "Arrow Keys + Enter to Select", (255, 255, 255))
+                                 "Arrow Keys + Enter to Select", (200, 200, 200))
 
     def draw_character_select(self):
+        """캐릭터 선택 화면"""
         if self.font_large:
             # 제목
             if self.character_select_phase == 1:
@@ -214,7 +237,7 @@ class MenuManager:
                 if i == self.cursor_index and self.font_small:
                     desc = self.get_character_description(char)
                     self.font_small.draw(self.width // 2 - 200, y_start - i * 80 - 40,
-                                         desc, (255, 255, 255))
+                                         desc, (200, 200, 200))
 
         # P1이 이미 선택했으면 표시
         if self.player1_character and self.font_small:
@@ -222,6 +245,7 @@ class MenuManager:
                                  f"P1: {self.player1_character}", (255, 215, 0))
 
     def draw_difficulty_select(self):
+        """난이도 선택 화면"""
         if self.font_large:
             self.font_large.draw(self.width // 2 - 350, 600,
                                  "SELECT DIFFICULTY", (255, 255, 255))
@@ -241,6 +265,7 @@ class MenuManager:
                                          desc, (200, 200, 200))
 
     def draw_map_select(self):
+        """맵 선택 화면"""
         if self.font_large:
             self.font_large.draw(self.width // 2 - 250, 600,
                                  "SELECT STAGE", (255, 255, 255))
@@ -262,6 +287,7 @@ class MenuManager:
             self.font_small.draw(self.width // 2 - 300, 150, summary, (200, 200, 200))
 
     def get_character_description(self, char):
+        """캐릭터 설명"""
         descriptions = {
             'Fighter': "Balanced - ATK:10/15 SPD:3",
             'Shinobi': "Fast - ATK:8/12 SPD:4",
@@ -270,6 +296,7 @@ class MenuManager:
         return descriptions.get(char, "")
 
     def get_difficulty_description(self, diff):
+        """난이도 설명"""
         descriptions = {
             'Easy': "For Beginners - Slow & Passive AI",
             'Normal': "Balanced Challenge",
@@ -278,6 +305,7 @@ class MenuManager:
         return descriptions.get(diff, "")
 
     def get_selections(self):
+        """선택된 옵션들 반환"""
         return {
             'game_mode': self.game_mode,
             'player1_character': self.player1_character,
@@ -288,4 +316,5 @@ class MenuManager:
         }
 
     def close(self):
+        """메뉴 종료"""
         close_canvas()
