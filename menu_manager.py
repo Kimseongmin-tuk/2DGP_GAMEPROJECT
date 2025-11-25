@@ -1,4 +1,5 @@
 from pico2d import *
+from sound_manager import sound_manager
 
 
 class MenuManager:
@@ -45,6 +46,11 @@ class MenuManager:
     def init(self):
         """메뉴 초기화"""
         open_canvas(self.width, self.height)
+
+        # 사운드 로드 및 메뉴 BGM 재생 (반복)
+        sound_manager.load_sounds()
+        sound_manager.load_bgm()
+        sound_manager.play_bgm('menu', repeat=True)
 
         # 폰트 로드
         try:

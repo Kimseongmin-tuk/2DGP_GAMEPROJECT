@@ -1,5 +1,6 @@
 from pico2d import *
 import time
+from sound_manager import sound_manager
 
 
 class Character:
@@ -630,6 +631,12 @@ class Character:
             self.frame = 0
             self.frame_time = 0
 
+            # 캐릭터별 공격 사운드
+            if self.character_name == 'Fighter':
+                sound_manager.play_sound('punch')
+            else:  # Shinobi, Samurai
+                sound_manager.play_sound('sword')
+
     def attack2(self):
         if (not self.attacking and not self.attacking2 and not self.blocking and
                 not self.hurt and self.attack_cooldown <= 0):
@@ -637,6 +644,12 @@ class Character:
             self.attack2_hit_applied = False  # 새 공격 시작: 아직 맞춘 적 없음
             self.frame_time = 0
             self.frame = 0
+
+            # 캐릭터별 공격 사운드
+            if self.character_name == 'Fighter':
+                sound_manager.play_sound('punch')
+            else:  # Shinobi, Samurai
+                sound_manager.play_sound('sword')
 
     def draw(self):
         if self.facing_right:

@@ -1,6 +1,7 @@
 from pico2d import *
 from character import Character
 from ai_controller import *
+from sound_manager import sound_manager
 import time
 
 
@@ -82,6 +83,9 @@ class GameManager:
         # 배경 이미지 로드
         self.load_background()
 
+        # 메뉴 BGM 정지
+        sound_manager.stop_bgm()
+
         # 폰트 로드
         try:
             self.font = load_font('Font/ENCR10B.TTF', 60)
@@ -122,6 +126,9 @@ class GameManager:
         self.last_time_update = time.time()
 
         self.running = True
+
+        # 첫 라운드 사운드 재생
+        sound_manager.play_sound('first_round')
 
     def handle_events(self):
         events = get_events()
@@ -300,6 +307,11 @@ class GameManager:
         self.round_winner = winner
         self.round_end_time = 0
 
+        # KO 사운드는 체력이 0이 되어서 진 경우만 재생 (시간 종료는 제외)
+        if winner != 0:  # 무승부가 아닌 경우
+            if (winner == 1 and self.character2.hp <= 0) or (winner == 2 and self.character1.hp <= 0):
+                sound_manager.play_sound('ko')
+
         # 승수 증가
         if winner == 1:
             self.player1_wins += 1
@@ -312,6 +324,12 @@ class GameManager:
         self.round_end = False
         self.round_winner = None
         self.round_end_time = 0
+
+        # 라운드별 사운드 재생
+        if self.round_number == 2:
+            sound_manager.play_sound('second_round')
+        elif self.round_number == 3:
+            sound_manager.play_sound('final_round')
 
         # HP 초기화
         self.character1.hp = self.character1.max_hp
