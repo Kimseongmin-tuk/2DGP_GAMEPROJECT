@@ -26,9 +26,12 @@ class SoundManager:
             # 게임 효과음
             self.sounds['ko'] = load_wav('Sound/KO.wav')
 
-            # 볼륨 설정 (0.0 ~ 1.0)
-            for sound in self.sounds.values():
-                sound.set_volume(64)  # 50%
+            # 기본 볼륨 설정
+            for sound_name, sound in self.sounds.items():
+                if sound_name == 'ko':
+                    sound.set_volume(15)  # KO는 15%로 더 낮게
+                else:
+                    sound.set_volume(64)  # 나머지는 50%
 
             print("효과음 로드 완료")
         except Exception as e:
