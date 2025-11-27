@@ -1,10 +1,11 @@
 import random
 import time
 
+
 class AIController:
     def __init__(self, character, opponent, difficulty='normal'):
-        self.character = character # 컴퓨터가 조종할 캐릭터
-        self.opponent = opponent # 상대 캐릭터
+        self.character = character  # 컴퓨터가 조종할 캐릭터
+        self.opponent = opponent  # 상대 캐릭터
 
         # 컴퓨터 행동 타이머
         self.action_timer = 0
@@ -14,17 +15,20 @@ class AIController:
         self.current_action = None
         self.action_duration = 0
 
+        # 델타타임 관리
+        self.last_update_time = time.time()
+
         # 난이도에 따른 성향 설정
         if difficulty == 'easy':
             self.aggressiveness = 0.4  # 소극적
-            self.defensiveness = 0.5   # 방어적
-            self.reaction_time = 0.5   # 느린 반응
+            self.defensiveness = 0.5  # 방어적
+            self.reaction_time = 0.5  # 느린 반응
             self.next_action_time_min = 0.5
             self.next_action_time_max = 1.0
         elif difficulty == 'hard':
             self.aggressiveness = 0.9  # 매우 공격적
-            self.defensiveness = 0.2   # 방어 거의 안함
-            self.reaction_time = 0.1   # 빠른 반응
+            self.defensiveness = 0.2  # 방어 거의 안함
+            self.reaction_time = 0.1  # 빠른 반응
             self.next_action_time_min = 0.2
             self.next_action_time_max = 0.4
         else:  # normal
@@ -38,7 +42,15 @@ class AIController:
         self.last_action_time = time.time()
 
     def update(self):
-        self.action_timer += 0.01
+        # 델타타임 계산
+        current_time = time.time()
+        delta_time = current_time - self.last_update_time
+        self.last_update_time = current_time
+
+        # 최대 델타타임 제한
+        delta_time = min(delta_time, 0.1)
+
+        self.action_timer += delta_time
 
         # 일정 시간마다 새로운 행동
         if self.action_timer >= self.next_action_time:
@@ -47,17 +59,17 @@ class AIController:
             self.next_action_time = random.uniform(self.next_action_time_min, self.next_action_time_max)
 
         # 현재 행동 수행
-        self.perform_action()
+        self.perform_action(delta_time)
 
     def decide_action(self):
         distance = abs(self.character.x - self.opponent.x)
 
         # 상대와 거리에 따른 행동 결정
-        if distance < 100: # 근거리
+        if distance < 100:  # 근거리
             self.decide_close_range_action()
-        elif distance < 200: # 중거리
+        elif distance < 200:  # 중거리
             self.decide_mid_range_action()
-        else: # 원거리
+        else:  # 원거리
             self.decide_long_range_action()
 
     def decide_close_range_action(self):
@@ -123,11 +135,11 @@ class AIController:
             self.current_action = 'jump_forward'
             self.action_duration = 0.3
 
-    def perform_action(self):
+    def perform_action(self, delta_time):
         if self.current_action is None:
             return
 
-        self.action_duration -= 0.01
+        self.action_duration -= delta_time
 
         if self.action_duration <= 0:
             self.stop_all_movement()

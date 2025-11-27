@@ -16,6 +16,10 @@ class Character:
         self.run_speed = speed * 2  # 달릴 때 속도 (2배)
         self.facing_right = facing_right
 
+        # 델타타임 관리
+        self.last_update_time = time.time()
+        self.frame_rate = 100  # 기본 프레임률
+
         # 점프 관련 변수
         self.jump_speed = 0
         self.gravity = 0.8
@@ -239,8 +243,8 @@ class Character:
         self.back_dash_frames = 0
         self.back_dash_total_frames = 10  # 대쉬에 사용할 프레임 수
         self.back_dash_speed = 9  # 프레임당 이동 거리
-        self.back_dash_cooldown = 0  # 백대쉬 쿨다운
-        self.back_dash_cooldown_time = 50  # 백대쉬 사이 딜레이
+        self.back_dash_cooldown = 0  # 백대쉬 쿨다운 (프레임)
+        self.back_dash_cooldown_time = 50  # 백대쉬 사이 딜레이 (프레임)
 
         # 피격 전 이동 상태 저장 (피격 후 복원용)
         self.saved_moving_left = False
@@ -254,8 +258,8 @@ class Character:
         # 프레임 타이머 초기화
         self.frame_time = 0
 
-        # 공격 쿨타임 설정
-        self.attack_cooldown = 0  # 남은 쿨타임 (프레임)
+        # 공격 쿨타임 설정 (프레임 단위)
+        self.attack_cooldown = 0  # 남은 쿨타임
 
     def key_down(self, direction):
         current_time = time.time()
@@ -486,12 +490,24 @@ class Character:
         return False
 
     def update(self, opponent_x=None):
+        # 델타타임 계산 및 프레임 보정
+        current_time = time.time()
+        delta_time = current_time - self.last_update_time
+        self.last_update_time = current_time
+
+        # 델타타임 제한 (너무 큰 값 방지)
+        if delta_time > 0.1:
+            delta_time = 0.1
+
+        # 프레임 보정 계수 (100 FPS 기준)
+        frame_mult = delta_time * self.frame_rate
+
         # 사망 애니메이션 중이면
         if self.dead:
             # 바닥에 떨어지는 중력 적용
             if self.y > self.ground_y:
-                self.y += self.jump_speed
-                self.jump_speed -= self.gravity
+                self.y += self.jump_speed * frame_mult
+                self.jump_speed -= self.gravity * frame_mult
 
                 if self.y <= self.ground_y:
                     self.y = self.ground_y
@@ -499,7 +515,7 @@ class Character:
 
             # 바닥에 도달한 후에만 Dead 애니메이션 재생
             if self.y <= self.ground_y:
-                self.frame_time += 1
+                self.frame_time += frame_mult
                 if self.frame_time >= 10:
                     self.frame += 1
                     self.frame_time = 0
@@ -510,9 +526,9 @@ class Character:
 
         # 공격 쿨타임 감소
         if self.attack_cooldown > 0:
-            self.attack_cooldown -= 1
+            self.attack_cooldown -= frame_mult
         if self.back_dash_cooldown > 0:
-            self.back_dash_cooldown -= 1
+            self.back_dash_cooldown -= frame_mult
 
         # 항상 상대와 마주보도록 설정
         if opponent_x is not None:
@@ -523,8 +539,8 @@ class Character:
 
         # 점프 처리
         if self.jumping:
-            self.y += self.jump_speed
-            self.jump_speed -= self.gravity
+            self.y += self.jump_speed * frame_mult
+            self.jump_speed -= self.gravity * frame_mult
 
             if self.y <= self.ground_y:
                 self.y = self.ground_y
@@ -535,11 +551,11 @@ class Character:
         # 뒤로 대쉬 처리 (짧은 시간 동안 빠르게 이동)
         if self.back_dashing:
             if self.facing_right:
-                self.x -= self.back_dash_speed
+                self.x -= self.back_dash_speed * frame_mult
             else:
-                self.x += self.back_dash_speed
+                self.x += self.back_dash_speed * frame_mult
 
-            self.back_dash_frames += 1
+            self.back_dash_frames += frame_mult
 
             if self.back_dash_frames >= self.back_dash_total_frames:
                 self.back_dashing = False
@@ -554,9 +570,9 @@ class Character:
             current_speed = self.run_speed if self.running else self.speed
 
             if self.moving_left:
-                self.x -= current_speed
+                self.x -= current_speed * frame_mult
             if self.moving_right:
-                self.x += current_speed
+                self.x += current_speed * frame_mult
 
         # 화면 경계 처리
         if self.x < 0:
@@ -565,7 +581,7 @@ class Character:
             self.x = 1200
 
         # 프레임 업데이트
-        self.frame_time += 1
+        self.frame_time += frame_mult
 
         if self.blocking:
             # 방어 애니메이션

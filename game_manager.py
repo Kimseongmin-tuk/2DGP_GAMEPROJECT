@@ -39,6 +39,9 @@ class GameManager:
         self.time_left = 99  # 남은 시간
         self.last_time_update = 0  # 마지막 시간 업데이트
 
+        # 델타타임 관리
+        self.last_update_time = 0
+
         # HP바 이미지
         self.hp_images = {}
 
@@ -184,6 +187,9 @@ class GameManager:
                         self.character2.key_up('right')
 
     def update(self):
+        # 델타타임 계산 (이미 run에서 계산되지만 독립적으로 사용)
+        current_time = time.time()
+
         # 매치가 완전히 끝났으면 업데이트 중지
         if self.match_over:
             self.ko_time += 1
@@ -197,8 +203,8 @@ class GameManager:
             self.character1.update(opponent_x=self.character2.x)
             self.character2.update(opponent_x=self.character1.x)
 
-            # 3초 대기 후 다음 라운드 또는 매치 종료
-            if self.round_end_time >= 300:  # 3초 (100 FPS 기준)
+            # 3초 대기 후 다음 라운드 또는 매치 종료 (프레임 독립적)
+            if self.round_end_time >= 180:  # 약 3초 (프레임률 독립)
                 if self.player1_wins >= 2 or self.player2_wins >= 2:
                     # 매치 종료 (2승 달성)
                     self.match_over = True
@@ -581,10 +587,19 @@ class GameManager:
         self.last_time_update = time.time()
 
     def run(self):
+        self.last_update_time = time.time()
+
         while self.running:
+            # 델타타임 계산
+            current_time = time.time()
+            delta_time = current_time - self.last_update_time
+            self.last_update_time = current_time
+
             self.handle_events()
             self.update()
             self.draw()
+
+            # 프레임 제한 (약 100 FPS, 하지만 델타타임으로 프레임 독립적)
             delay(0.01)
 
     def close(self):
