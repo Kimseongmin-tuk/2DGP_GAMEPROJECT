@@ -357,19 +357,19 @@ class GameManager:
         # 플레이어1이 플레이어2를 공격했는지 확인
         if self.character2.check_hit(self.character1):
             if self.character1.attacking and not self.character1.attack1_hit_applied:
-                self.character2.get_hit(self.character1.attack_damage)
+                self.character2.get_hit(self.character1.attack_damage, attacker=self.character1)
                 self.character1.attack1_hit_applied = True  # 이번 공격으로 이미 맞췄음
             elif self.character1.attacking2 and not self.character1.attack2_hit_applied:
-                self.character2.get_hit(self.character1.attack2_damage)
+                self.character2.get_hit(self.character1.attack2_damage, attacker=self.character1)
                 self.character1.attack2_hit_applied = True  # 이번 공격으로 이미 맞췄음
 
         # 플레이어2가 플레이어1을 공격했는지 확인
         if self.character1.check_hit(self.character2):
             if self.character2.attacking and not self.character2.attack1_hit_applied:
-                self.character1.get_hit(self.character2.attack_damage)
+                self.character1.get_hit(self.character2.attack_damage, attacker=self.character2)
                 self.character2.attack1_hit_applied = True  # 이번 공격으로 이미 맞췄음
             elif self.character2.attacking2 and not self.character2.attack2_hit_applied:
-                self.character1.get_hit(self.character2.attack2_damage)
+                self.character1.get_hit(self.character2.attack2_damage, attacker=self.character2)
                 self.character2.attack2_hit_applied = True  # 이번 공격으로 이미 맞췄음
 
         # 승패 체크 (KO)

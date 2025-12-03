@@ -238,6 +238,11 @@ class Character:
         self.dead = False  # 사망 상태
         self.death_animation_finished = False  # 사망 애니메이션 완료
 
+        # 스턴 상태
+        self.stunned = False  # 스턴 상태
+        self.stun_time = 0  # 남은 스턴 시간 (프레임)
+        self.stun_duration = 150  # 스턴 지속 시간
+
         # 뒤로 대쉬 상태
         self.back_dashing = False
         self.back_dash_frames = 0
@@ -264,7 +269,7 @@ class Character:
     def key_down(self, direction):
         current_time = time.time()
 
-        if not self.jumping and not self.hurt and not self.blocking:
+        if not self.jumping and not self.hurt and not self.blocking and not self.stunned:
             # 더블 탭 판단
             if current_time - self.last_key_time[direction] < self.double_tap_threshold:
                 # 현재 바라보는 방향 기준으로 앞으로/뒤로 판별
@@ -320,10 +325,20 @@ class Character:
             self.frame = 0
             self.frame_time = 0
 
-    def get_hit(self, damage=10):
+    def get_hit(self, damage=10, attacker=None):
         # 이미 피격 모션 중이거나 막는 중이면 무시
+        # 스턴 상태일 때는 피격 가능 (스턴은 무적이 아님)
         if self.hurt or self.blocking or self.dead:
             return
+
+        # 공격자가 스턴 상태면 데미지 주지 않음 (스턴 중에는 공격 불가)
+        if attacker and attacker.stunned:
+            return
+
+        # 스턴 상태였다면 스턴 해제
+        if self.stunned:
+            self.stunned = False
+            self.stun_time = 0
 
         # 피격 직전의 움직임 방향을 기억해서
         # '뒤로 이동 중이면 가드' 판정을 유지
@@ -355,6 +370,20 @@ class Character:
                 self.x -= 5
             else:
                 self.x += 5
+
+            # 방어 성공 시 공격자에게 스턴 적용
+            if attacker is not None:
+                attacker.stunned = True
+                attacker.stun_time = attacker.stun_duration
+                # 공격자의 모든 행동 상태 강제 해제
+                attacker.attacking = False
+                attacker.attacking2 = False
+                attacker.hurt = False
+                attacker.blocking = False
+                attacker.jumping = False
+                attacker.back_dashing = False
+                attacker.frame = 0
+                attacker.frame_time = 0
         else:
             # 정면/전진 중 피격
             self.blocking = False
@@ -524,6 +553,22 @@ class Character:
                         self.death_animation_finished = True
             return  # 다른 업데이트 중지
 
+        # 스턴 상태 처리
+        if self.stunned:
+            if self.stun_time > 0:
+                self.stun_time -= frame_mult
+            else:
+                # 스턴 종료 - 모든 상태 초기화
+                self.stunned = False
+                self.stun_time = 0
+                self.frame = 0
+                self.frame_time = 0
+                # 다른 상태들도 확실히 정리
+                self.hurt = False
+                self.blocking = False
+                self.attacking = False
+                self.attacking2 = False
+
         # 공격 쿨타임 감소
         if self.attack_cooldown > 0:
             self.attack_cooldown -= frame_mult
@@ -563,7 +608,7 @@ class Character:
         # 좌우 이동 (대쉬 중이 아닐 때만)
         if (not self.back_dashing and
                 not self.attacking and not self.attacking2 and
-                not self.blocking and not self.hurt):
+                not self.blocking and not self.hurt and not self.stunned):
             if self.is_moving_backward():
                 self.running = False
 
@@ -583,7 +628,12 @@ class Character:
         # 프레임 업데이트
         self.frame_time += frame_mult
 
-        if self.blocking:
+        if self.stunned:
+            # 스턴 애니메이션 (Hurt 프레임 사용)
+            if self.frame_time >= 10:
+                self.frame = (self.frame + 1) % self.hurt_frame_count
+                self.frame_time = 0
+        elif self.blocking:
             # 방어 애니메이션
             if self.frame_time >= 10:
                 self.frame += 1
@@ -641,7 +691,7 @@ class Character:
 
     def attack(self):
         if (not self.attacking and not self.attacking2 and not self.blocking and
-                not self.hurt and self.attack_cooldown <= 0):
+                not self.hurt and not self.stunned and self.attack_cooldown <= 0):
             self.attacking = True
             self.attack1_hit_applied = False  # 새 공격 시작: 아직 맞춘 적 없음
             self.frame = 0
@@ -655,7 +705,7 @@ class Character:
 
     def attack2(self):
         if (not self.attacking and not self.attacking2 and not self.blocking and
-                not self.hurt and self.attack_cooldown <= 0):
+                not self.hurt and not self.stunned and self.attack_cooldown <= 0):
             self.attacking2 = True
             self.attack2_hit_applied = False  # 새 공격 시작: 아직 맞춘 적 없음
             self.frame_time = 0
@@ -714,6 +764,20 @@ class Character:
                 self.shield_image.clip_composite_draw(
                     self.frame * self.shield_frame_width, 0,
                     self.shield_frame_width, self.frame_height,
+                    0, flip, self.x, self.y, 200, 200
+                )
+        elif self.stunned:
+            # 스턴 이미지 출력 (Hurt 이미지 사용)
+            if self.facing_right:
+                self.hurt_image.clip_draw(
+                    self.frame * self.hurt_frame_width, 0,
+                    self.hurt_frame_width, self.frame_height,
+                    self.x, self.y, 200, 200
+                )
+            else:
+                self.hurt_image.clip_composite_draw(
+                    self.frame * self.hurt_frame_width, 0,
+                    self.hurt_frame_width, self.frame_height,
                     0, flip, self.x, self.y, 200, 200
                 )
         elif self.hurt:

@@ -42,6 +42,11 @@ class AIController:
         self.last_action_time = time.time()
 
     def update(self):
+        # 캐릭터가 스턴 상태면 행동하지 않음
+        if self.character.stunned:
+            self.stop_all_movement()
+            return
+
         # 델타타임 계산
         current_time = time.time()
         delta_time = current_time - self.last_update_time
