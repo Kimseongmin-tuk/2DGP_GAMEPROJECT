@@ -33,11 +33,18 @@ def main():
             )
 
             game.run()
+
+            # 메뉴로 돌아가기 플래그 확인
+            return_to_menu = game.return_to_menu
+
             game.close()
 
-            # 게임 종료 후 메뉴로 돌아가기
-            menu = MenuManager(width=1200, height=800)
-            menu.init()
+            # 메뉴로 돌아가거나 게임 종료 후 메뉴로
+            if return_to_menu or not game.running:
+                menu = MenuManager(width=1200, height=800)
+                menu.init()
+            else:
+                break
 
         menu.draw()
 

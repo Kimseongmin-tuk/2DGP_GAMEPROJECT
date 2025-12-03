@@ -114,6 +114,32 @@ class SoundManager:
         if self.current_bgm:
             self.current_bgm.set_volume(volume)
 
+    def pause_all_sounds(self):
+        """모든 효과음 채널 일시정지"""
+        try:
+            from pico2d import pause_all_wav
+            pause_all_wav()
+        except:
+            # pause_all_wav가 없는 경우 SDL_mixer 직접 사용
+            try:
+                import sdl2.sdlmixer as mixer
+                mixer.Mix_Pause(-1)  # -1은 모든 채널
+            except:
+                pass
+
+    def resume_all_sounds(self):
+        """모든 효과음 채널 재개"""
+        try:
+            from pico2d import resume_all_wav
+            resume_all_wav()
+        except:
+            # resume_all_wav가 없는 경우 SDL_mixer 직접 사용
+            try:
+                import sdl2.sdlmixer as mixer
+                mixer.Mix_Resume(-1)  # -1은 모든 채널
+            except:
+                pass
+
 
 # 전역 사운드 매니저 인스턴스
 sound_manager = SoundManager()

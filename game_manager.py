@@ -48,6 +48,11 @@ class GameManager:
         # 폰트 (나중에 로드)
         self.font = None
 
+        # 일시정지 상태
+        self.paused = False
+        self.pause_cursor = 0  # 0: Resume, 1: Restart, 2: Main Menu
+        self.return_to_menu = False  # 메뉴로 돌아가기 플래그
+
     def get_text_width(self, text, font_size):
         """텍스트를 중앙 정렬하기 위한 x 좌표 계산"""
         return len(text) * font_size * 0.6
@@ -140,11 +145,33 @@ class GameManager:
             if event.type == SDL_QUIT:
                 self.running = False
             elif event.type == SDL_KEYDOWN:
-                if event.key == SDLK_ESCAPE:
-                    self.running = False
+                # 일시정지 메뉴가 열려있을 때
+                if self.paused:
+                    if event.key == SDLK_ESCAPE:
+                        # ESC로 일시정지 해제
+                        self.paused = False
+                        self.pause_cursor = 0
+                        sound_manager.resume_bgm()  # BGM 재개
+                        sound_manager.resume_all_sounds()  # 재생 중이던 효과음 재개
+                        sound_manager.sound_enabled = True  # 새로운 효과음 활성화
+                    elif event.key == SDLK_UP or event.key == SDLK_w:
+                        self.pause_cursor = max(0, self.pause_cursor - 1)
+                    elif event.key == SDLK_DOWN or event.key == SDLK_s:
+                        self.pause_cursor = min(2, self.pause_cursor + 1)
+                    elif event.key == SDLK_RETURN or event.key == SDLK_SPACE:
+                        self.handle_pause_selection()
+                    continue
+
+                # 게임 중 ESC키로 일시정지
+                if event.key == SDLK_ESCAPE and not self.match_over:
+                    self.paused = True
+                    self.pause_cursor = 0
+                    sound_manager.pause_bgm()  # BGM 일시정지
+                    sound_manager.pause_all_sounds()  # 재생 중인 모든 효과음 일시정지
+                    sound_manager.sound_enabled = False  # 새로운 효과음 비활성화
 
                 # 게임 오버 시 재시작
-                if self.match_over and event.key == SDLK_SPACE:
+                elif self.match_over and event.key == SDLK_SPACE:
                     self.reset_game()
 
                 # 플레이어1
@@ -173,6 +200,9 @@ class GameManager:
                         self.character2.jump()
 
             elif event.type == SDL_KEYUP:
+                if self.paused:
+                    continue
+
                 # 플레이어1
                 if event.key == SDLK_a:
                     self.character1.key_up('left')
@@ -186,7 +216,72 @@ class GameManager:
                     elif event.key == SDLK_RIGHT:
                         self.character2.key_up('right')
 
+
+    def handle_pause_selection(self):
+        """일시정지 메뉴 선택 처리"""
+        if self.pause_cursor == 0:  # Resume
+            self.paused = False
+            sound_manager.resume_bgm()  # BGM 재개
+            sound_manager.resume_all_sounds()  # 재생 중이던 효과음 재개
+            sound_manager.sound_enabled = True  # 새로운 효과음 활성화
+        elif self.pause_cursor == 1:  # Restart
+            self.paused = False
+            # 재시작이므로 기존 사운드는 재개하지 않고 새로운 사운드만 허용
+            sound_manager.sound_enabled = True  # 효과음 활성화
+            self.reset_game()  # 여기서 first_round 사운드가 새로 재생됨
+            # reset_game에서 라운드 사운드가 재생되므로 BGM은 그대로 재개
+            sound_manager.resume_bgm()
+        elif self.pause_cursor == 2:  # Main Menu
+            self.return_to_menu = True
+            self.running = False
+            sound_manager.stop_bgm()  # BGM 정지
+            sound_manager.sound_enabled = True  # 효과음 활성화 (메뉴로 돌아갈 때)
+
+    def draw_pause_menu(self):
+        """일시정지 메뉴 그리기"""
+        if not self.paused or self.font is None:
+            return
+
+        # 반투명 배경 (어두운 오버레이)
+        from pico2d import draw_rectangle
+        draw_rectangle(0, 0, self.width, self.height)
+
+        # PAUSED 타이틀
+        try:
+            title_font = load_font('Font/ENCR10B.TTF', 80)
+            title = "PAUSED"
+            x = self.get_centered_x(title, 80)
+            title_font.draw(x, 550, title, (255, 255, 255))
+        except:
+            pass
+
+        # 메뉴 옵션들
+        try:
+            menu_font = load_font('Font/ENCR10B.TTF', 50)
+            options = ['RESUME', 'RESTART', 'MAIN MENU']
+            y_start = 400
+
+            for i, option in enumerate(options):
+                color = (255, 255, 0) if i == self.pause_cursor else (150, 150, 150)
+                x = self.get_centered_x(option, 50)
+                menu_font.draw(x, y_start - i * 80, option, color)
+        except:
+            pass
+
+        # 조작 안내
+        try:
+            info_font = load_font('Font/ENCR10B.TTF', 30)
+            info = "Arrow Keys + Enter to Select | ESC to Resume"
+            x = self.get_centered_x(info, 30)
+            info_font.draw(x, 100, info, (200, 200, 200))
+        except:
+            pass
+
     def update(self):
+        # 일시정지 상태면 업데이트 중지
+        if self.paused:
+            return
+
         # 델타타임 계산 (이미 run에서 계산되지만 독립적으로 사용)
         current_time = time.time()
 
@@ -537,6 +632,10 @@ class GameManager:
         if self.match_over:
             self.draw_game_over()
 
+        # 일시정지 메뉴
+        if self.paused:
+            self.draw_pause_menu()
+
         update_canvas()
 
     def reset_game(self):
@@ -585,6 +684,16 @@ class GameManager:
         # 타이머 초기화
         self.time_left = self.game_time
         self.last_time_update = time.time()
+
+        # AI 컨트롤러 초기화
+        if self.ai_enable and self.ai_controller:
+            self.ai_controller.current_action = None
+            self.ai_controller.action_duration = 0
+            self.ai_controller.action_timer = 0
+            self.ai_controller.last_update_time = time.time()
+
+        # 첫 라운드 사운드 재생
+        sound_manager.play_sound('first_round')
 
     def run(self):
         self.last_update_time = time.time()
