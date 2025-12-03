@@ -311,12 +311,16 @@ class Character:
     def key_up(self, direction):
         if direction == 'left':
             self.moving_left = False
+            self.saved_moving_left = False  # saved 상태도 함께 초기화
             if not self.moving_right:
                 self.running = False
+                self.saved_running = False
         elif direction == 'right':
             self.moving_right = False
+            self.saved_moving_right = False  # saved 상태도 함께 초기화
             if not self.moving_left:
                 self.running = False
+                self.saved_running = False
 
     def jump(self):
         if not self.jumping and not self.blocking:
@@ -384,6 +388,13 @@ class Character:
                 attacker.back_dashing = False
                 attacker.frame = 0
                 attacker.frame_time = 0
+                # saved 이동 상태도 초기화 (스턴 후 자동 이동 버그 방지)
+                attacker.saved_moving_left = False
+                attacker.saved_moving_right = False
+                attacker.saved_running = False
+                attacker.moving_left = False
+                attacker.moving_right = False
+                attacker.running = False
         else:
             # 정면/전진 중 피격
             self.blocking = False
