@@ -119,6 +119,13 @@ class GameManager:
             print("승리 배경 로드 실패")
             self.victory_bg = None
 
+        # 일시정지 배경 로드
+        try:
+            self.pause_bg = load_image('Background/menu_background.png')
+        except:
+            print("일시정지 배경 로드 실패")
+            self.pause_bg = None
+
         # 캐릭터 초기 위치 설정
         self.character1 = Character(character1_name, self.width // 4, 150, character_speed,
                                     facing_right=True)
@@ -242,9 +249,9 @@ class GameManager:
         if not self.paused or self.font is None:
             return
 
-        # 반투명 배경 (어두운 오버레이)
-        from pico2d import draw_rectangle
-        draw_rectangle(0, 0, self.width, self.height)
+        # 일시정지 배경 이미지
+        if self.pause_bg:
+            self.pause_bg.draw(self.width // 2, self.height // 2)
 
         # PAUSED 타이틀
         try:
