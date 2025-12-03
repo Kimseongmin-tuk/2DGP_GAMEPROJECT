@@ -335,10 +335,10 @@ class Character:
         if attacker and attacker.stunned:
             return
 
-        # 스턴 상태였다면 스턴 해제
-        if self.stunned:
-            self.stunned = False
-            self.stun_time = 0
+        # # 스턴 상태였다면 스턴 해제
+        # if self.stunned:
+        #     self.stunned = False
+        #     self.stun_time = 0
 
         # 피격 직전의 움직임 방향을 기억해서
         # '뒤로 이동 중이면 가드' 판정을 유지
