@@ -11,7 +11,7 @@ class MenuManager:
         self.font_small = None
 
         # 메뉴 상태
-        self.menu_state = 'mode_select'  # mode_select, character_select, difficulty_select, map_select
+        self.menu_state = 'title'  # title, mode_select, character_select, difficulty_select, map_select
 
         # 선택 사항들
         self.game_mode = None  # '1P' or '2P'
@@ -33,6 +33,7 @@ class MenuManager:
 
         # 이미지들 (나중에 로드)
         self.background = None
+        self.title_bg = None  # 타이틀 화면
         self.character_images = {}
 
     def get_text_width(self, text, font_size):
@@ -47,10 +48,9 @@ class MenuManager:
         """메뉴 초기화"""
         open_canvas(self.width, self.height)
 
-        # 사운드 로드 및 메뉴 BGM 재생 (반복)
+        # 사운드 로드 (타이틀 화면에서는 BGM 재생 안 함)
         sound_manager.load_sounds()
         sound_manager.load_bgm()
-        sound_manager.play_bgm('menu', repeat=True)
 
         # 폰트 로드
         try:
@@ -62,11 +62,13 @@ class MenuManager:
 
         # 배경 이미지 로드
         try:
+            self.title_bg = load_image('Background/title.png')
             self.menu_bg = load_image('Background/menu_background.png')
             self.character_select_bg = load_image('Background/character_select_background.png')
             print("배경 이미지 로드 완료")
         except:
             print("배경 이미지 로드 실패 - 기본 배경 사용")
+            self.title_bg = None
             self.menu_bg = None
             self.character_select_bg = None
 
@@ -86,10 +88,22 @@ class MenuManager:
                 return 'quit'
 
             elif event.type == SDL_KEYDOWN:
+                # 타이틀 화면에서 스페이스바 입력
+                if self.menu_state == 'title':
+                    if event.key == SDLK_SPACE:
+                        self.menu_state = 'mode_select'
+                        # 모드 선택 화면으로 넘어갈 때 BGM 시작
+                        sound_manager.play_bgm('menu', repeat=True)
+                    return 'continue'
+
                 if event.key == SDLK_ESCAPE:
                     # ESC로 이전 메뉴로
-                    if self.menu_state == 'mode_select':
+                    if self.menu_state == 'title':
                         return 'quit'
+                    elif self.menu_state == 'mode_select':
+                        self.menu_state = 'title'
+                        # 타이틀로 돌아갈 때 BGM 정지
+                        sound_manager.stop_bgm()
                     elif self.menu_state == 'character_select':
                         if self.character_select_phase == 2:
                             self.character_select_phase = 1
@@ -198,12 +212,17 @@ class MenuManager:
         clear_canvas()
 
         # 배경 그리기
-        if self.menu_state in ['mode_select', 'difficulty_select', 'map_select'] and self.menu_bg:
+        if self.menu_state == 'title' and self.title_bg:
+            # 타이틀 화면
+            self.title_bg.draw(self.width // 2, self.height // 2)
+        elif self.menu_state in ['mode_select', 'difficulty_select', 'map_select'] and self.menu_bg:
             self.menu_bg.draw(self.width // 2, self.height // 2)
         elif self.menu_state == 'character_select' and self.character_select_bg:
             self.character_select_bg.draw(self.width // 2, self.height // 2)
 
-        if self.menu_state == 'mode_select':
+        if self.menu_state == 'title':
+            pass  # 타이틀 화면은 이미지만 표시
+        elif self.menu_state == 'mode_select':
             self.draw_mode_select()
         elif self.menu_state == 'character_select':
             self.draw_character_select()
