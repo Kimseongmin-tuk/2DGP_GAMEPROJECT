@@ -75,9 +75,7 @@ class GameManager:
 
         try:
             self.background = load_image(map_file)
-            print(f"배경 로드 성공: {map_file}")
         except:
-            print(f"배경 로드 실패: {map_file} - 배경 없이 진행")
             self.background = None
 
     def init(self, character1_name='Fighter', character2_name='Samurai', character_speed=3, enable_ai=True,
@@ -98,7 +96,6 @@ class GameManager:
         try:
             self.font = load_font('Font/ENCR10B.TTF', 60)
         except:
-            print("폰트 로드 실패 - 기본 폰트 사용")
             self.font = None
 
         # HP바용 이미지 로드
@@ -109,21 +106,18 @@ class GameManager:
             self.hp_images['dark_red'] = load_image('HP_BAR/dark_red.png')
             self.hp_images['white'] = load_image('HP_BAR/white.png')
         except:
-            print("HP바 이미지 로드 실패 - 기본 그리기 사용")
             self.hp_images = None
 
         # 승리 배경 로드
         try:
             self.victory_bg = load_image('Background/victory_background.png')
         except:
-            print("승리 배경 로드 실패")
             self.victory_bg = None
 
         # 일시정지 배경 로드
         try:
             self.pause_bg = load_image('Background/menu_background.png')
         except:
-            print("일시정지 배경 로드 실패")
             self.pause_bg = None
 
         # 캐릭터 초기 위치 설정

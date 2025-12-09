@@ -13,39 +13,29 @@ class SoundManager:
 
     def load_sounds(self):
         """효과음 로드"""
-        try:
-            # 공격 효과음
-            self.sounds['punch'] = load_wav('Sound/punch.wav')  # Fighter용
-            self.sounds['sword'] = load_wav('Sound/sword.wav')  # Shinobi, Samurai용
+        # 공격 효과음
+        self.sounds['punch'] = load_wav('Sound/punch.wav')  # Fighter용
+        self.sounds['sword'] = load_wav('Sound/sword.wav')  # Shinobi, Samurai용
 
-            # 라운드 효과음
-            self.sounds['first_round'] = load_wav('Sound/first_round.wav')
-            self.sounds['second_round'] = load_wav('Sound/second_round.wav')
-            self.sounds['final_round'] = load_wav('Sound/final_round.wav')
+        # 라운드 효과음
+        self.sounds['first_round'] = load_wav('Sound/first_round.wav')
+        self.sounds['second_round'] = load_wav('Sound/second_round.wav')
+        self.sounds['final_round'] = load_wav('Sound/final_round.wav')
 
-            # 게임 효과음
-            self.sounds['ko'] = load_wav('Sound/KO.wav')
+        # 게임 효과음
+        self.sounds['ko'] = load_wav('Sound/KO.wav')
 
-            # 기본 볼륨 설정
-            for sound_name, sound in self.sounds.items():
-                if sound_name == 'ko':
-                    sound.set_volume(15)  # KO는 15%로 더 낮게
-                else:
-                    sound.set_volume(64)  # 나머지는 50%
-
-            print("효과음 로드 완료")
-        except Exception as e:
-            print(f"효과음 로드 실패: {e}")
+        # 기본 볼륨 설정
+        for sound_name, sound in self.sounds.items():
+            if sound_name == 'ko':
+                sound.set_volume(15)  # KO는 15%로 더 낮게
+            else:
+                sound.set_volume(64)  # 나머지는 50%
 
     def load_bgm(self):
         """배경음악 로드"""
-        try:
-            # 메뉴 BGM
-            self.bgm['menu'] = load_music('Sound/start_menu.wav')
-
-            print("BGM 로드 완료")
-        except Exception as e:
-            print(f"BGM 로드 실패: {e}")
+        # 메뉴 BGM
+        self.bgm['menu'] = load_music('Sound/start_menu.wav')
 
     def play_sound(self, sound_name):
         """효과음 재생"""
@@ -54,8 +44,6 @@ class SoundManager:
 
         if sound_name in self.sounds:
             self.sounds[sound_name].play()
-        else:
-            print(f"효과음 '{sound_name}' 없음")
 
     def play_bgm(self, bgm_name, repeat=True):
         """배경음악 재생"""
@@ -73,8 +61,6 @@ class SoundManager:
             else:
                 self.bgm[bgm_name].play()
             self.current_bgm = self.bgm[bgm_name]
-        else:
-            print(f"BGM '{bgm_name}' 없음")
 
     def stop_bgm(self):
         """배경음악 정지"""

@@ -53,31 +53,23 @@ class MenuManager:
         sound_manager.load_bgm()
 
         # 폰트 로드
-        try:
-            self.font_large = load_font('Font/ENCR10B.TTF', 80)
-            self.font_medium = load_font('Font/ENCR10B.TTF', 50)
-            self.font_small = load_font('Font/ENCR10B.TTF', 30)
-        except:
-            print("폰트 로드 실패")
+        self.font_large = load_font('Font/ENCR10B.TTF', 80)
+        self.font_medium = load_font('Font/ENCR10B.TTF', 50)
+        self.font_small = load_font('Font/ENCR10B.TTF', 30)
 
         # 배경 이미지 로드
         try:
             self.title_bg = load_image('Background/title.png')
             self.menu_bg = load_image('Background/menu_background.png')
             self.character_select_bg = load_image('Background/character_select_background.png')
-            print("배경 이미지 로드 완료")
         except:
-            print("배경 이미지 로드 실패 - 기본 배경 사용")
             self.title_bg = None
             self.menu_bg = None
             self.character_select_bg = None
 
         # 캐릭터 미리보기 이미지 로드 시도
-        try:
-            for char in self.characters:
-                self.character_images[char] = load_image(f'{char}/Idle.png')
-        except:
-            print("캐릭터 이미지 로드 실패")
+        for char in self.characters:
+            self.character_images[char] = load_image(f'{char}/Idle.png')
 
     def handle_events(self):
         """키 입력 처리"""
