@@ -106,7 +106,7 @@ class MenuManager:
                             self.cursor_index = 0
                     elif self.menu_state == 'difficulty_select':
                         self.menu_state = 'character_select'
-                        self.character_select_phase = 2
+                        self.character_select_phase = 1
                         self.player2_character = None
                         self.cursor_index = 0
                     elif self.menu_state == 'map_select':
@@ -275,6 +275,42 @@ class MenuManager:
                     desc = self.get_character_description(char)
                     x_desc = self.get_centered_x(desc, 30)
                     self.font_small.draw(x_desc, y_start - i * 80 - 40, desc, (200, 200, 200))
+
+        # 조작법 표시 (오른쪽 하단)
+        if self.font_small:
+            # 1P 조작법
+            p1_title = "=== P1 CONTROLS ==="
+            x_p1 = 50
+            self.font_small.draw(x_p1, 450, p1_title, (255, 200, 100))
+
+            p1_controls = [
+                "Move: W / A / D",
+                "Jump: W",
+                "Attack1: F",
+                "Attack2: G",
+            ]
+
+            y_pos = 410
+            for control in p1_controls:
+                self.font_small.draw(x_p1, y_pos, control, (200, 200, 200))
+                y_pos -= 25
+
+            # 2P 조작법
+            p2_title = "=== P2 CONTROLS ==="
+            x_p2 = self.width - 350
+            self.font_small.draw(x_p2, 450, p2_title, (100, 200, 255))
+
+            p2_controls = [
+                "Move: Arrow Keys",
+                "Jump: UP",
+                "Attack1: K",
+                "Attack2: L",
+            ]
+
+            y_pos = 410
+            for control in p2_controls:
+                self.font_small.draw(x_p2, y_pos, control, (200, 200, 200))
+                y_pos -= 25
 
         # P1이 이미 선택했으면 표시
         if self.player1_character and self.font_small:
